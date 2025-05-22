@@ -22,7 +22,7 @@ class FinancialDataViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Most Searched Stocks",
         description="Returns a list of the most searched stocks",
-        tags=["Data Ingestion"],
+        tags=["Finance Raw Data"],
         responses={
             200: OpenApiResponse(response=StockDataSerializer(many=True)),
             500: OpenApiResponse(description="Internal Server Error"),
@@ -45,7 +45,7 @@ class FinancialDataViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Market Highest Volume",
         description="Returns a list of stocks with highest trading volume",
-        tags=["Data Ingestion"],
+        tags=["Finance Raw Data"],
         responses={
             200: OpenApiResponse(response=MarketActiveStockSerializer(many=True)),
             500: OpenApiResponse(description="Internal Server Error"),
@@ -69,7 +69,7 @@ class FinancialDataViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Most Sector Performance",
         description="Returns performance change for each sector",
-        tags=["Data Ingestion"],
+        tags=["Finance Raw Data"],
         responses={
             200: OpenApiResponse(response=SectorPerformanceSerializer(many=True)),
             500: OpenApiResponse(description="Internal Server Error"),
@@ -93,7 +93,7 @@ class FinancialDataViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Most Traded Cryptocurrencies",
         description="Returns a list of most traded cryptocurrency",
-        tags=["Data Ingestion"],
+        tags=["Finance Raw Data"],
         responses={
             200: OpenApiResponse(response=CryptoDataSerializer(many=True)),
             500: OpenApiResponse(description="Internal Server Error"),
@@ -117,7 +117,7 @@ class FinancialDataViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Most Stocks Downtrend",
         description="Returns a list of stocks with the highest negative price changes",
-        tags=["Data Ingestion"],
+        tags=["Finance Raw Data"],
         responses={
             200: OpenApiResponse(response=DowntrendStockSerializer(many=True)),
             500: OpenApiResponse(description="Internal Server Error"),

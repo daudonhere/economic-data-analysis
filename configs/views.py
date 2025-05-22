@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from django.utils.timezone import now
 from configs.models import IngestionData
-from configs.serializers import IngestionDataSerializer
+from configs.serializers import IngestionDataSerializer, GetIngestionDataSerializer
 from configs.utils import success_response, error_response
 import requests
 
@@ -33,8 +33,8 @@ class IngestionDataViewSet(viewsets.ViewSet):
     ]
 
     @extend_schema(
-        summary="Fetch and store data from internal API endpoints",
-        description="Fetches 'data' field (dict or list) from internal endpoints and stores it in IngestionData table with source reference.",
+        summary="Fetch and store data",
+        description="Fetches 'data' field (dict or list) from internal endpoints and stores it",
         tags=["Data Ingestion"],
         responses={
             200: OpenApiResponse(response=IngestionDataSerializer(many=True), description="All data ingested successfully."),
@@ -42,7 +42,7 @@ class IngestionDataViewSet(viewsets.ViewSet):
             500: OpenApiResponse(description="All API calls failed.")
         }
     )
-    @action(detail=False, methods=["get"], url_path="ingest-all")
+    @action(detail=False, methods=["get"], url_path="storing")
     def fetch_and_store_all_api_data(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
         success_data = []
@@ -58,7 +58,7 @@ class IngestionDataViewSet(viewsets.ViewSet):
                 if "data" not in json_data:
                     raise ValueError("'data' field missing")
 
-                content = json_data["data"]  # could be dict or list
+                content = json_data["data"]
 
                 instance = IngestionData.objects.create(
                     content=content,
@@ -97,3 +97,28 @@ class IngestionDataViewSet(viewsets.ViewSet):
             data={"failed_logs": fail_logs},
             code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+        
+    @extend_schema(
+        summary="Get ingested data",
+        description="Returns a list of ingested data",
+        tags=["Data Ingestion"],
+        responses={200: OpenApiResponse(response=GetIngestionDataSerializer(many=True))}
+    )
+    @action(detail=False, methods=["get"], url_path="collecting")
+    def list_simple_ingested_data(self, request):
+        try:
+            queryset = IngestionData.objects.all().order_by('-createdAt')
+            serializer = GetIngestionDataSerializer(queryset, many=True)
+
+            return success_response(
+                data=serializer.data,
+                message="Data fetched successfully.",
+                code=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return error_response(
+                message=f"Failed to fetch data: {str(e)}",
+                data=[],
+                code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
