@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
 from pytrends.request import TrendReq
 from trendApp.serializers import TrendingTopicSerializer
-from configs.utils import success_response, error_response  # Sesuaikan path ini dengan struktur project kamu
+from configs.utils import success_response, error_response
 
 class SearchTrendViewSet(viewsets.ViewSet):
     pytrends = TrendReq(hl='en-US', tz=360)
@@ -11,7 +11,7 @@ class SearchTrendViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Most Searched On The Internet",
         description="Showing the most search data trends on the internet related to economics and finance",
-        tags=["Economy & Finances"],
+        tags=["Mining Raw Data"],
         parameters=[
             OpenApiParameter(name="query", description="search query", required=True, type=str),
         ],
