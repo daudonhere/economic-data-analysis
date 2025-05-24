@@ -6,6 +6,7 @@ from configs.views import HomePage, ErrorPage, IngestionDataViewSet
 from financeApp.urls import financeApp_urlpatterns
 from economyApp.urls import economyApp_urlpatterns
 from trendApp.urls import trendApp_urlpatterns
+from transformedApp.urls import transformedApp_urlpatterns
 
 handler400 = lambda request, exception: ErrorPage(request, exception, 400)
 handler403 = lambda request, exception: ErrorPage(request, exception, 403)
@@ -26,6 +27,7 @@ urlpatterns = [
     path("services/v1/", include((economyApp_urlpatterns, "economyApp"), namespace="economyApp")),
     path("services/v1/", include((financeApp_urlpatterns, "financeApp"), namespace="financeApp")),
     path("services/v1/", include((trendApp_urlpatterns, "trendApp"), namespace="trendApp")),
+    path("services/v1/", include((transformedApp_urlpatterns, "transformed"), namespace="transformed")),
     path("services/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("services/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("services/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),

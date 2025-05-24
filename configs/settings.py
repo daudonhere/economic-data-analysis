@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'configs',
     'economyApp',
     'financeApp',
-    'trendApp'
+    'trendApp',
+    'transformedApp',
 ]
 
 REST_FRAMEWORK = {
