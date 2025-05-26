@@ -1,13 +1,13 @@
+import uuid
 from django.db import models
+from django.utils.timezone import now
 
 class CleansedData(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     content = models.JSONField()
-    source = models.CharField(max_length=255)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
+    source = models.URLField()
+    createdAt = models.DateTimeField(default=now)
+    updatedAt = models.DateTimeField(default=now)
 
     class Meta:
-        db_table = 'tb_cleansed_data'
-
-    def __str__(self):
-        return f"Cleansed from {self.source} at {self.createdAt}"
+        db_table = "tb_cleansed_data"

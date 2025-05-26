@@ -22,7 +22,6 @@ def ErrorPage(request, exception=None, status_code=500):
 class IngestionDataViewSet(viewsets.ViewSet):
     ENDPOINTS = [
         "/services/v1/economy/fiscal",
-        "/services/v1/economy/fiscal",
         "/services/v1/economy/macro",
         "/services/v1/economy/monetary",
         "/services/v1/finance/crypto",
