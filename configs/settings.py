@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'economyApp',
     'financeApp',
     'trendApp',
+    'cleansingApp',
+    'ingestionApp',
     'transformedApp',
 ]
 
@@ -62,7 +64,6 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "CONTACT": {
         "name": "Daud Yusup",
-        "url": "https://github.com/daudonhere",
         "email": "hellodadedaud@gmail.com",
     },
     "LICENSE": {

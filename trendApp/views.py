@@ -11,7 +11,7 @@ class SearchTrendViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Most Searched On The Internet",
         description="Showing the most search data trends on the internet related to economics and finance",
-        tags=["Mining Raw Data"],
+        tags=["Data Processing"],
         parameters=[
             OpenApiParameter(name="query", description="search query", required=True, type=str),
         ],

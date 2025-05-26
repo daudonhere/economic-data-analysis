@@ -1,13 +1,18 @@
+import uuid
 from django.db import models
 
-class CleansedData(models.Model):
+class TransformedData(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     content = models.JSONField()
-    source = models.CharField(max_length=255)
+    source = models.URLField()
+    frequency = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True, default=0.00
+    )
+    percentage = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True, default=0.00
+    )
     createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True) 
 
     class Meta:
-        db_table = 'tb_cleansed_data'
-
-    def __str__(self):
-        return f"Cleansed from {self.source} at {self.createdAt}"
+        db_table = "tb_transformed_data"

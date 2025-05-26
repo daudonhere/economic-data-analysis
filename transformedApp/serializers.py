@@ -1,15 +1,15 @@
 from rest_framework import serializers
-from transformedApp.models import CleansedData
+from .models import TransformedData
 
-class CleansedDataSerializer(serializers.ModelSerializer):
+class TransformedDataSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CleansedData
-        fields = ['id', 'content', 'source', 'createdAt', 'updatedAt']
+        model = TransformedData
+        fields = ['id', 'content', 'source', 'frequency', 'percentage', 'createdAt', 'updatedAt']
         
-class GetCleansedDataSerializer(serializers.ModelSerializer):
+class GetTransformedDataSerializer(serializers.ModelSerializer):
     result = serializers.JSONField(source='content')
     updatedAt = serializers.DateTimeField()
 
     class Meta:
-        model = CleansedData
+        model = TransformedData
         fields = ['id', 'result', 'source', 'updatedAt']
