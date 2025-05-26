@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from transformedApp.models import CleansedData
+from cleansingApp.models import CleansedData
 
 class CleansedDataSerializer(serializers.ModelSerializer):
     class Meta:

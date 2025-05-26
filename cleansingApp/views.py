@@ -5,8 +5,8 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from configs.utils import success_response, error_response
-from transformedApp.models import CleansedData
-from transformedApp.serializers import GetCleansedDataSerializer
+from cleansingApp.models import CleansedData
+from cleansingApp.serializers import GetCleansedDataSerializer
 
 
 class CleansedDataViewSet(viewsets.ViewSet):
