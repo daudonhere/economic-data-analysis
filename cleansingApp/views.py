@@ -53,26 +53,23 @@ class CleansedDataViewSet(viewsets.ViewSet):
     }
 
     @extend_schema(
-        summary="Fetch, filter, clean by predefined rules, and store/update cleansed data",
+        summary="Clean & Stored Ingested Data",
         description=(
-            "Ambil data dari endpoint ingestion, filter berdasarkan daftar `source` yang telah ditentukan. "
-            "Untuk setiap source yang cocok, bersihkan data berdasarkan aturan yang ada (hapus field tertentu dari `result` atau dari item di dalam `result.feed` jika `result.feed` adalah list/dict), "
-            "kemudian simpan field `result` (yang bisa berupa list atau dictionary) ke `tb_cleansed_data.content`. "
-            "Jika entri untuk source tersebut belum ada, maka akan dibuat. Jika sudah ada, akan diperbarui."
+            "Fetch data from the ingestion endpoint and clensing"
         ),
         tags=["Data Processing"],
         responses={
             200: OpenApiResponse(
-                description="Data berhasil difetch, difilter, dan disimpan atau diperbarui untuk source yang relevan.",
+                description="Data Successfully Fetched",
                 response=GetCleansedDataSerializer(many=True)
             ),
-            400: OpenApiResponse(description="Bad request / kesalahan validasi."),
-            500: OpenApiResponse(description="Kesalahan internal."),
-            502: OpenApiResponse(description="Error dari API sumber."),
-            503: OpenApiResponse(description="Gagal menghubungi API sumber.")
+            400: OpenApiResponse(description="Bad request / Validation Error."),
+            500: OpenApiResponse(description="Internal server error."),
+            502: OpenApiResponse(description="Error from source API."),
+            503: OpenApiResponse(description="Failed to contact source API.")
         }
     )
-    @action(detail=False, methods=["get"], url_path="process")
+    @action(detail=False, methods=["get"], url_path="storing")
     def list_simple_ingested_data(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
         source_api_full_url = f"{base_url}{self.SOURCE_API_URL_PATH}"
@@ -89,7 +86,7 @@ class CleansedDataViewSet(viewsets.ViewSet):
                 items = raw_data_json['data']
             else:
                 return error_response(
-                    message="Struktur data tidak dikenali dari source API.",
+                    message="Unrecognized data structure from source API.",
                     code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
             
@@ -172,16 +169,42 @@ class CleansedDataViewSet(viewsets.ViewSet):
             serializer = GetCleansedDataSerializer(saved_objects_list, many=True)
             return success_response(
                 data=serializer.data,
-                message=f"Data untuk {len(saved_objects_list)} source yang relevan berhasil diproses, dibersihkan, dan disimpan/diperbarui.",
+                message=f"Data for {len(saved_objects_list)} relevant sources successfully processed, cleaned, and stored/updated.",
                 code=status.HTTP_200_OK
             )
 
         except requests.exceptions.HTTPError as e:
-            error_message = f"Error dari source API ({source_api_full_url}): {e.response.status_code}"
+            error_message = f"Error from source API ({source_api_full_url}): {e.response.status_code}"
             if e.response and e.response.text:
                 error_message += f" - {e.response.text[:500]}"
             return error_response(message=error_message, code=status.HTTP_502_BAD_GATEWAY)
         except requests.exceptions.RequestException as e:
-            return error_response(message=f"Gagal menghubungi source API ({source_api_full_url}): {str(e)}", code=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return error_response(message=f"Failed to contact source API ({source_api_full_url}): {str(e)}", code=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
-            return error_response(message=f"Terjadi kesalahan tidak terduga: {str(e)}", code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return error_response(message=f"An unexpected error occurred: {str(e)}", code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    @extend_schema(
+        summary="Get cleansed data",
+        description="Returns a list of cleansed data",
+        tags=["Data Processing"],
+        responses={200: OpenApiResponse(response=GetCleansedDataSerializer(many=True))}
+    )
+    @action(detail=False, methods=["get"], url_path="collecting")
+    def list_cleansed_data(self, request):
+        try:
+            queryset = CleansedData.objects.all().order_by('-updatedAt')
+            serializer = GetCleansedDataSerializer(queryset, many=True)
+
+            return success_response(
+                data=serializer.data,
+                message="Cleansed data fetched successfully.",
+                code=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return error_response(
+                message=f"Failed to fetch cleansed data: {str(e)}",
+                data=[],
+                code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            

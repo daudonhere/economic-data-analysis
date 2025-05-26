@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'financeApp',
     'trendApp',
     'cleansingApp',
-    "ingestionApp",
+    'ingestionApp',
+    'transformedApp',
 ]
 
 REST_FRAMEWORK = {
