@@ -1,15 +1,26 @@
 import requests
 from django.utils.timezone import now
 from django.db import transaction
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, serializers as drf_serializers
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from configs.utils import success_response, error_response
-from cleansingApp.models import CleansedData
-from cleansingApp.serializers import GetCleansedDataSerializer
+from cleaningApp.models import CleaningData
+from cleaningApp.serializers import GetCleaningDataSerializer
 
+class CustomSuccessResponseWrapperSerializer(drf_serializers.Serializer):
+    data = GetCleaningDataSerializer(many=True, required=False, allow_null=True)
+    status = drf_serializers.CharField(default="success")
+    code = drf_serializers.IntegerField()
+    messages = drf_serializers.CharField()
 
-class CleansedDataViewSet(viewsets.ViewSet):
+class CustomErrorResponseWrapperSerializer(drf_serializers.Serializer):
+    data = drf_serializers.JSONField(required=False, allow_null=True)
+    status = drf_serializers.CharField(default="error")
+    code = drf_serializers.IntegerField()
+    messages = drf_serializers.CharField()
+
+class CleaningDataViewSet(viewsets.ViewSet):
     SOURCE_API_URL_PATH = "/services/v1/ingestion/collecting"
     TARGET_SOURCE_PATHS_RELATIVE = [
         "/services/v1/economy/fiscal",
@@ -53,23 +64,21 @@ class CleansedDataViewSet(viewsets.ViewSet):
     }
 
     @extend_schema(
-        summary="Clean & Stored Ingested Data",
-        description=(
-            "Fetch data from the ingestion endpoint and clensing"
-        ),
-        tags=["Data Processing"],
+        summary="A. Clean and store data",
+        description=("Data cleaning process"),
+        tags=["Data Cleaning"],
         responses={
             200: OpenApiResponse(
-                description="Data Successfully Fetched",
-                response=GetCleansedDataSerializer(many=True)
+                description="Data Successfully Processed and Stored",
+                response=CustomSuccessResponseWrapperSerializer 
             ),
-            400: OpenApiResponse(description="Bad request / Validation Error."),
-            500: OpenApiResponse(description="Internal server error."),
-            502: OpenApiResponse(description="Error from source API."),
-            503: OpenApiResponse(description="Failed to contact source API.")
+            400: OpenApiResponse(description="Bad request", response=CustomErrorResponseWrapperSerializer),
+            500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer),
+            502: OpenApiResponse(description="Error from source API.", response=CustomErrorResponseWrapperSerializer),
+            503: OpenApiResponse(description="Failed to contact source API.", response=CustomErrorResponseWrapperSerializer)
         }
     )
-    @action(detail=False, methods=["get"], url_path="storing")
+    @action(detail=False, methods=["post"], url_path="process")
     def list_simple_ingested_data(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
         source_api_full_url = f"{base_url}{self.SOURCE_API_URL_PATH}"
@@ -152,7 +161,7 @@ class CleansedDataViewSet(viewsets.ViewSet):
 
                     if isinstance(content_to_save, (list, dict)):
                         with transaction.atomic():
-                            obj, created = CleansedData.objects.get_or_create(
+                            obj, created = CleaningData.objects.get_or_create(
                                 source=item_source_url,
                                 defaults={
                                     'content': content_to_save,
@@ -166,10 +175,10 @@ class CleansedDataViewSet(viewsets.ViewSet):
                             processed_objects_map[item_source_url] = obj
             
             saved_objects_list = list(processed_objects_map.values())
-            serializer = GetCleansedDataSerializer(saved_objects_list, many=True)
+            serializer = GetCleaningDataSerializer(saved_objects_list, many=True)
             return success_response(
                 data=serializer.data,
-                message=f"Data for {len(saved_objects_list)} relevant sources successfully processed, cleaned, and stored/updated.",
+                message=f"Data for {len(saved_objects_list)} relevant sources successfully processed, cleaned, and stored.",
                 code=status.HTTP_200_OK
             )
 
@@ -184,27 +193,32 @@ class CleansedDataViewSet(viewsets.ViewSet):
             return error_response(message=f"An unexpected error occurred: {str(e)}", code=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     @extend_schema(
-        summary="Get cleansed data",
-        description="Returns a list of cleansed data",
-        tags=["Data Processing"],
-        responses={200: OpenApiResponse(response=GetCleansedDataSerializer(many=True))}
+        summary="B. Retrieve cleaned data",
+        description="Presenting cleaned data",
+        tags=["Data Cleaning"],
+        responses={
+            200: OpenApiResponse(
+                description="Cleaned data fetched successfully", 
+                response=CustomSuccessResponseWrapperSerializer # Menggunakan serializer pembungkus
+            ),
+            500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer)
+        }
     )
-    @action(detail=False, methods=["get"], url_path="collecting")
-    def list_cleansed_data(self, request):
+    @action(detail=False, methods=["get"], url_path="collect")
+    def list_cleaning_data(self, request):
         try:
-            queryset = CleansedData.objects.all().order_by('-updatedAt')
-            serializer = GetCleansedDataSerializer(queryset, many=True)
+            queryset = CleaningData.objects.all().order_by('-updatedAt')
+            serializer = GetCleaningDataSerializer(queryset, many=True)
 
             return success_response(
                 data=serializer.data,
-                message="Cleansed data fetched successfully.",
+                message="Cleaning data fetched successfully",
                 code=status.HTTP_200_OK
             )
 
         except Exception as e:
             return error_response(
-                message=f"Failed to fetch cleansed data: {str(e)}",
+                message=f"Failed to fetch cleaning data: {str(e)}",
                 data=[],
                 code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-            
