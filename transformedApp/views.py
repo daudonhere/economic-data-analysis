@@ -1,7 +1,7 @@
 import requests
 from decimal import Decimal, ROUND_HALF_UP, DivisionByZero
 from django.db import transaction
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, serializers as drf_serializers
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from configs.utils import success_response, error_response 
@@ -14,6 +14,19 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
+class BaseCustomResponseWrapperSerializer(drf_serializers.Serializer):
+    status = drf_serializers.CharField()
+    code = drf_serializers.IntegerField()
+    messages = drf_serializers.CharField()
+
+class TransformedDataListSuccessResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+    data = TransformedDataSerializer(many=True, required=False, allow_null=True)
+    status = drf_serializers.CharField(default="success")
+
+class CustomErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+    data = drf_serializers.JSONField(required=False, allow_null=True)
+    status = drf_serializers.CharField(default="error")
+
 def extract_text_from_json_content(data_content):
     texts = []
     if isinstance(data_content, dict):
@@ -23,13 +36,12 @@ def extract_text_from_json_content(data_content):
             elif isinstance(value, (dict, list)):
                 texts.extend(extract_text_from_json_content(value))
     elif isinstance(data_content, list):
-        for item in data_content:
-            if isinstance(item, str):
-                texts.append(item)
-            elif isinstance(item, (dict, list)):
-                 texts.extend(extract_text_from_json_content(item))
+        for item_element in data_content: # Renamed 'item' to 'item_element' to avoid conflict
+            if isinstance(item_element, str):
+                texts.append(item_element)
+            elif isinstance(item_element, (dict, list)):
+                 texts.extend(extract_text_from_json_content(item_element))
     return texts
-
 
 class DataTransformationViewSet(viewsets.ViewSet):
     CLEANING_DATA_ENDPOINT_PATH = "/services/v1/cleaning/collecting"
@@ -39,26 +51,26 @@ class DataTransformationViewSet(viewsets.ViewSet):
         return f"{base_url}{self.CLEANING_DATA_ENDPOINT_PATH}"
 
     @extend_schema(
-        summary="Process Cleaning Data and Store Transformations",
+        summary="A. Process Cleaning Data and Store Transformations",
         description=(
             "Fetches data from the cleaning data endpoint, calculates TF-IDF based frequency "
             "and percentage change, then stores each item as a new TransformedData record. "
             "Requires scikit-learn for TF-IDF calculation."
         ),
-        tags=["Data Transformation"],
+        tags=["3. Data Transformation"],
         responses={
             200: OpenApiResponse(
                 description="Data successfully transformed and stored.",
-                response=TransformedDataSerializer(many=True)
+                response=TransformedDataListSuccessResponseWrapperSerializer
             ),
-            400: OpenApiResponse(description="Bad request or validation error."),
-            500: OpenApiResponse(description="Internal server error."),
-            502: OpenApiResponse(description="Error from the cleaning data API."),
-            503: OpenApiResponse(description="Failed to contact the cleaning data API."),
-            501: OpenApiResponse(description="TF-IDF calculation engine (scikit-learn) not available.")
+            400: OpenApiResponse(description="Bad request or validation error.", response=CustomErrorResponseWrapperSerializer),
+            500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer),
+            502: OpenApiResponse(description="Error from the cleaning data API.", response=CustomErrorResponseWrapperSerializer),
+            503: OpenApiResponse(description="Failed to contact the cleaning data API.", response=CustomErrorResponseWrapperSerializer),
+            501: OpenApiResponse(description="TF-IDF calculation engine (scikit-learn) not available.", response=CustomErrorResponseWrapperSerializer)
         }
     )
-    @action(detail=False, methods=["post"], url_path="process-and-store")
+    @action(detail=False, methods=["post"], url_path="process")
     def process_and_store_from_cleaning(self, request):
         if not SKLEARN_AVAILABLE:
             return error_response(
@@ -162,5 +174,34 @@ class DataTransformationViewSet(viewsets.ViewSet):
         except Exception as e:
             return error_response(
                 message=f"An unexpected error occurred during transformation: {str(e)}",
+                code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @extend_schema(
+        summary="B. Retrieve Transformed Data",
+        description="Fetches and returns a list of all transformed data records.",
+        tags=["3. Data Transformation"],
+        responses={
+            200: OpenApiResponse(
+                description="Transformed data fetched successfully.",
+                response=TransformedDataListSuccessResponseWrapperSerializer
+            ),
+            500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer)
+        }
+    )
+    @action(detail=False, methods=["get"], url_path="collect")
+    def list_transformed_data(self, request):
+        try:
+            queryset = TransformedData.objects.all().order_by('-createdAt')
+            serializer = TransformedDataSerializer(queryset, many=True)
+            return success_response(
+                data=serializer.data,
+                message="Transformed data fetched successfully.",
+                code=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return error_response(
+                message=f"Failed to fetch transformed data: {str(e)}",
+                data=[],
                 code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

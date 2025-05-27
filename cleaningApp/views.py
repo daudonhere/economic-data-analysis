@@ -66,7 +66,7 @@ class CleaningDataViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="A. Clean and store data",
         description=("Data cleaning process"),
-        tags=["Data Cleaning"],
+        tags=["2. Data Cleaning"],
         responses={
             200: OpenApiResponse(
                 description="Data Successfully Processed and Stored",
@@ -195,7 +195,7 @@ class CleaningDataViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="B. Retrieve cleaned data",
         description="Presenting cleaned data",
-        tags=["Data Cleaning"],
+        tags=["2. Data Cleaning"],
         responses={
             200: OpenApiResponse(
                 description="Cleaned data fetched successfully", 

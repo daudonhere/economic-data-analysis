@@ -1,11 +1,48 @@
+import requests
+from django.utils.timezone import now
+from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiResponse
-from django.utils.timezone import now
+from configs.utils import success_response, error_response
 from ingestionApp.models import IngestionData
 from ingestionApp.serializers import IngestionDataSerializer, GetIngestionDataSerializer
-from configs.utils import success_response, error_response
-import requests
+from rest_framework import serializers as drf_serializers
+
+class BaseCustomResponseWrapperSerializer(drf_serializers.Serializer):
+    status = drf_serializers.CharField()
+    code = drf_serializers.IntegerField()
+    messages = drf_serializers.CharField()
+
+class IngestedDataPayloadSerializer(drf_serializers.Serializer):
+    ingested_data = IngestionDataSerializer(many=True)
+
+class FetchStore200ResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+    data = IngestedDataPayloadSerializer()
+    status = drf_serializers.CharField(default="success")
+
+class FailedLogEntrySerializer(drf_serializers.Serializer):
+    url = drf_serializers.URLField()
+    error = drf_serializers.CharField()
+
+class IngestedDataPartialPayloadSerializer(drf_serializers.Serializer):
+    message = drf_serializers.CharField()
+    success_count = drf_serializers.IntegerField()
+    failed_count = drf_serializers.IntegerField()
+    failed_logs = FailedLogEntrySerializer(many=True)
+    ingested_data = IngestionDataSerializer(many=True)
+
+class FetchStore207ResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+    data = IngestedDataPartialPayloadSerializer()
+    status = drf_serializers.CharField(default="success") 
+
+class ListIngestedSuccessResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+    data = GetIngestionDataSerializer(many=True)
+    status = drf_serializers.CharField(default="success")
+
+class CustomErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+    data = drf_serializers.JSONField(required=False, allow_null=True)
+    status = drf_serializers.CharField(default="error")
 
 
 class IngestionDataViewSet(viewsets.ViewSet):
@@ -21,16 +58,16 @@ class IngestionDataViewSet(viewsets.ViewSet):
     ]
 
     @extend_schema(
-        summary="Fetch and store data",
-        description="Fetches 'data' field (dict or list) from internal endpoints and stores it",
-        tags=["Data Processing"],
+        summary="A. Collect and store data",
+        description="collect all data sources and store them",
+        tags=["1. Data Ingestion"],
         responses={
-            200: OpenApiResponse(response=IngestionDataSerializer(many=True), description="All data ingested successfully."),
-            207: OpenApiResponse(description="Partial success. Some endpoints failed."),
-            500: OpenApiResponse(description="All API calls failed.")
+            200: OpenApiResponse(response=FetchStore200ResponseWrapperSerializer, description="All data ingested successfully."),
+            207: OpenApiResponse(response=FetchStore207ResponseWrapperSerializer, description="Partial success. Some endpoints failed."),
+            500: OpenApiResponse(response=CustomErrorResponseWrapperSerializer, description="All API calls failed.")
         }
     )
-    @action(detail=False, methods=["get"], url_path="storing")
+    @action(detail=False, methods=["post"], url_path="process")
     def fetch_and_store_all_api_data(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
         success_data = []
@@ -44,21 +81,33 @@ class IngestionDataViewSet(viewsets.ViewSet):
                 json_data = response.json()
 
                 if "data" not in json_data:
-                    raise ValueError("'data' field missing")
+                    fail_logs.append({"url": full_url, "error": "'data' field missing in JSON response"})
+                    continue 
 
                 content = json_data["data"]
-
-                instance = IngestionData.objects.create(
-                    content=content,
-                    source=full_url,
-                    createdAt=now(),
-                    updatedAt=now()
-                )
+                with transaction.atomic():
+                    instance = IngestionData.objects.create(
+                        content=content,
+                        source=full_url,
+                        createdAt=now(), 
+                        updatedAt=now()  
+                    )
                 serializer = IngestionDataSerializer(instance)
                 success_data.append(serializer.data)
 
-            except Exception as e:
-                fail_logs.append({"url": full_url, "error": str(e)})
+            except requests.exceptions.RequestException as e:
+                fail_logs.append({"url": full_url, "error": f"RequestException: {str(e)}"})
+            except ValueError as e:
+                fail_logs.append({"url": full_url, "error": f"ValueError/DataError: {str(e)}"})
+            except Exception as e: 
+                fail_logs.append({"url": full_url, "error": f"Unexpected error: {str(e)}"})
+        
+        if not success_data and not fail_logs:
+             return success_response(
+                data=[],
+                message="No endpoints defined or processed.",
+                code=status.HTTP_200_OK 
+            )
 
         if success_data and fail_logs:
             return success_response(
@@ -87,12 +136,15 @@ class IngestionDataViewSet(viewsets.ViewSet):
         )
         
     @extend_schema(
-        summary="Get ingested data",
-        description="Returns a list of ingested data",
-        tags=["Data Processing"],
-        responses={200: OpenApiResponse(response=GetIngestionDataSerializer(many=True))}
+        summary="B. Retrieve ingested data",
+        description="Presenting collected data",
+        tags=["1. Data Ingestion"],
+        responses={
+            200: OpenApiResponse(response=ListIngestedSuccessResponseWrapperSerializer, description="Data fetched successfully."),
+            500: OpenApiResponse(response=CustomErrorResponseWrapperSerializer, description="Internal server error while fetching data.")
+        }
     )
-    @action(detail=False, methods=["get"], url_path="collecting")
+    @action(detail=False, methods=["get"], url_path="collect")
     def list_simple_ingested_data(self, request):
         try:
             queryset = IngestionData.objects.all().order_by('-createdAt')
