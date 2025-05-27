@@ -7,7 +7,7 @@ from financeApp.urls import financeApp_urlpatterns
 from economyApp.urls import economyApp_urlpatterns
 from trendApp.urls import trendApp_urlpatterns
 from ingestionApp.urls import ingestionApp_urlpatterns
-from cleansingApp.urls import cleansingApp_urlpatterns
+from cleaningApp.urls import cleaningApp_urlpatterns
 from transformedApp.urls import transformedApp_urlpatterns
 
 handler400 = lambda request, exception: ErrorPage(request, exception, 400)
@@ -28,7 +28,7 @@ urlpatterns = [
     path("services/v1/", include((economyApp_urlpatterns, "economyApp"), namespace="economyApp")),
     path("services/v1/", include((financeApp_urlpatterns, "financeApp"), namespace="financeApp")),
     path("services/v1/", include((trendApp_urlpatterns, "trendApp"), namespace="trendApp")),
-    path("services/v1/", include((cleansingApp_urlpatterns, "cleansingApp"), namespace="cleansingApp")),
+    path("services/v1/", include((cleaningApp_urlpatterns, "cleaningApp"), namespace="cleaningApp")),
     path("services/v1/", include((ingestionApp_urlpatterns, "ingestionApp"), namespace="ingestionApp")),
     path("services/v1/", include((transformedApp_urlpatterns, "transformedApp"), namespace="transformedApp")),
     path("services/schema/", SpectacularAPIView.as_view(), name="schema"),

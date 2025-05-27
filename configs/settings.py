@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'economyApp',
     'financeApp',
     'trendApp',
-    'cleansingApp',
+    'cleaningApp',
     'ingestionApp',
     'transformedApp',
 ]
