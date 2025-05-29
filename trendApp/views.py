@@ -9,17 +9,17 @@ class SearchTrendViewSet(viewsets.ViewSet):
     pytrends = TrendReq(hl='en-US', tz=360)
 
     @extend_schema(
-        summary="Most Searched On The Internet",
-        description="Showing the most search data trends on the internet related to economics and finance",
-        tags=["Data Mining"],
+        summary="Most searched on google",
+        description="Showing the most search data trends related to economics and finance",
+        tags=["0. Data Trending"],
         parameters=[
             OpenApiParameter(name="query", description="search query", required=True, type=str),
         ],
         responses={
             200: OpenApiResponse(response=TrendingTopicSerializer(many=True)),
-            204: OpenApiResponse(description="There Is No Data For This Query"),
-            400: OpenApiResponse(description="Query Parameter Is Required"),
-            500: OpenApiResponse(description="An Error Occurred On The Server.")
+            204: OpenApiResponse(description="There is no data for this query"),
+            400: OpenApiResponse(description="Query parameter is required"),
+            500: OpenApiResponse(description="An error occurred on the server.")
         }
     )
     @action(detail=False, methods=["get"], url_path="search")

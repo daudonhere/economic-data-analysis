@@ -59,11 +59,11 @@ class IngestionDataViewSet(viewsets.ViewSet):
 
     @extend_schema(
         summary="A. Collect and store data",
-        description="collect all data sources and store them",
+        description="Collect all data sources and store them",
         tags=["1. Data Ingestion"],
         responses={
             200: OpenApiResponse(response=FetchStore200ResponseWrapperSerializer, description="All data ingested successfully."),
-            207: OpenApiResponse(response=FetchStore207ResponseWrapperSerializer, description="Partial success. Some endpoints failed."),
+            207: OpenApiResponse(response=FetchStore207ResponseWrapperSerializer, description="Partial success, some endpoints failed."),
             500: OpenApiResponse(response=CustomErrorResponseWrapperSerializer, description="All API calls failed.")
         }
     )

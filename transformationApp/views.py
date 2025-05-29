@@ -51,16 +51,12 @@ class DataTransformationViewSet(viewsets.ViewSet):
         return f"{base_url}{self.CLEANING_DATA_ENDPOINT_PATH}"
 
     @extend_schema(
-        summary="A. Process Cleaning Data and Store Transformations",
-        description=(
-            "Fetches data from the cleaning data endpoint, calculates TF-IDF based frequency "
-            "and percentage change, then stores each item as a new TransformationData record. "
-            "Requires scikit-learn for TF-IDF calculation."
-        ),
+        summary="A. Process transform data and store transformations",
+        description=("Retrieve data and calculates TF-IDF based frequency"),
         tags=["3. Data Transformation"],
         responses={
             200: OpenApiResponse(
-                description="Data successfully transformation and stored.",
+                description="Data successfully transformed and stored",
                 response=TransformationDataListSuccessResponseWrapperSerializer
             ),
             400: OpenApiResponse(description="Bad request or validation error.", response=CustomErrorResponseWrapperSerializer),
@@ -178,8 +174,8 @@ class DataTransformationViewSet(viewsets.ViewSet):
             )
 
     @extend_schema(
-        summary="B. Retrieve Transformation Data",
-        description="Fetches and returns a list of all transformation data records.",
+        summary="B. Retrieve transformation data",
+        description="Retrieve a list of all transformation data records",
         tags=["3. Data Transformation"],
         responses={
             200: OpenApiResponse(
