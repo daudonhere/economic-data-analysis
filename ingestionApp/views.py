@@ -8,6 +8,7 @@ from configs.utils import success_response, error_response
 from ingestionApp.models import IngestionData
 from ingestionApp.serializers import IngestionDataSerializer, GetIngestionDataSerializer
 from rest_framework import serializers as drf_serializers
+from configs.endpoint import SERVICES_URL
 
 class BaseCustomResponseWrapperSerializer(drf_serializers.Serializer):
     status = drf_serializers.CharField()
@@ -46,21 +47,11 @@ class CustomErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
 
 
 class IngestionDataViewSet(viewsets.ViewSet):
-    ENDPOINTS = [
-        "/services/v1/economy/fiscal",
-        "/services/v1/economy/macro",
-        "/services/v1/economy/monetary",
-        "/services/v1/finance/crypto",
-        "/services/v1/finance/downtrend",
-        "/services/v1/finance/sector",
-        "/services/v1/finance/stocks",
-        "/services/v1/finance/volume",
-    ]
 
     @extend_schema(
         summary="A. Collect and store data",
         description="Collect all data sources and store them",
-        tags=["1. Data Ingestion"],
+        tags=["Data Ingestion"],
         responses={
             200: OpenApiResponse(response=FetchStore200ResponseWrapperSerializer, description="All data ingested successfully."),
             207: OpenApiResponse(response=FetchStore207ResponseWrapperSerializer, description="Partial success, some endpoints failed."),
@@ -73,7 +64,7 @@ class IngestionDataViewSet(viewsets.ViewSet):
         success_data = []
         fail_logs = []
 
-        for endpoint in self.ENDPOINTS:
+        for endpoint in self.SERVICES_URL:
             full_url = f"{base_url}{endpoint}"
             try:
                 response = requests.get(full_url)
@@ -138,7 +129,7 @@ class IngestionDataViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="B. Retrieve ingested data",
         description="Presenting collected data",
-        tags=["1. Data Ingestion"],
+        tags=["Data Ingestion"],
         responses={
             200: OpenApiResponse(response=ListIngestedSuccessResponseWrapperSerializer, description="Data fetched successfully."),
             500: OpenApiResponse(response=CustomErrorResponseWrapperSerializer, description="Internal server error while fetching data.")

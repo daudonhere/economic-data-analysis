@@ -11,7 +11,7 @@ class SearchTrendViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Most searched on google",
         description="Showing the most search data trends related to economics and finance",
-        tags=["0. Data Trending"],
+        tags=["Data Trending"],
         parameters=[
             OpenApiParameter(name="query", description="search query", required=True, type=str),
         ],

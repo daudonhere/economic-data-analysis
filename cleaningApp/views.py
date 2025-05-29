@@ -7,6 +7,7 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse
 from configs.utils import success_response, error_response
 from cleaningApp.models import CleaningData
 from cleaningApp.serializers import GetCleaningDataSerializer
+from configs.endpoint import SOURCE_SERVICES_URL, SOURCE_SERVICES_TARGET, SOURCE_SERVICES_CLEAN
 
 class CustomSuccessResponseWrapperSerializer(drf_serializers.Serializer):
     data = GetCleaningDataSerializer(many=True, required=False, allow_null=True)
@@ -21,52 +22,11 @@ class CustomErrorResponseWrapperSerializer(drf_serializers.Serializer):
     messages = drf_serializers.CharField()
 
 class CleaningDataViewSet(viewsets.ViewSet):
-    SOURCE_API_URL_PATH = "/services/v1/ingestion/collect"
-    TARGET_SOURCE_PATHS_RELATIVE = [
-        "/services/v1/economy/fiscal",
-        "/services/v1/economy/macro",
-        "/services/v1/economy/monetary",
-        "/services/v1/finance/crypto",
-        "/services/v1/finance/downtrend",
-        "/services/v1/finance/sector",
-        "/services/v1/finance/stocks",
-        "/services/v1/finance/volume",
-    ]
-    SOURCE_CLEANING_RULES = {
-        "/services/v1/finance/volume": {
-            "type": "list_of_dicts",
-            "keys_to_remove": ["symbol"]
-        },
-        "/services/v1/finance/stocks": {
-            "type": "list_of_dicts",
-            "keys_to_remove": ["type", "symbol", "exchangeShortName"]
-        },
-        "/services/v1/finance/downtrend": {
-            "type": "list_of_dicts",
-            "keys_to_remove": ["symbol"]
-        },
-        "/services/v1/finance/crypto": {
-            "type": "list_of_dicts",
-            "keys_to_remove": ["symbol", "stockExchange", "exchangeShortName"]
-        },
-        "/services/v1/economy/monetary": {
-            "type": "dict_with_feed",
-            "feed_keys_to_remove": ["url", "source", "author", "authors", "banner_image", "source_domain"]
-        },
-        "/services/v1/economy/fiscal": {
-            "type": "dict_with_feed",
-            "feed_keys_to_remove": ["url", "source", "author", "authors", "banner_image", "source_domain"]
-        },
-        "/services/v1/economy/macro": {
-            "type": "dict_with_feed",
-            "feed_keys_to_remove": ["url", "source", "author", "authors", "banner_image", "source_domain"]
-        },
-    }
 
     @extend_schema(
         summary="A. Clean and store data",
         description=("Data cleaning process"),
-        tags=["2. Data Cleaning"],
+        tags=["Data Cleaning"],
         responses={
             200: OpenApiResponse(
                 description="Data successfully processed and stored",
@@ -81,8 +41,8 @@ class CleaningDataViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["post"], url_path="process")
     def list_simple_ingested_data(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
-        source_api_full_url = f"{base_url}{self.SOURCE_API_URL_PATH}"
-        target_source_full_urls = {f"{base_url}{path}" for path in self.TARGET_SOURCE_PATHS_RELATIVE}
+        source_api_full_url = f"{base_url}{self.SOURCE_SERVICES_URL}"
+        target_source_full_urls = {f"{base_url}{path}" for path in self.SOURCE_SERVICES_TARGET}
 
         try:
             response = requests.get(source_api_full_url, timeout=10)
@@ -114,8 +74,8 @@ class CleaningDataViewSet(viewsets.ViewSet):
                     if item_source_url.startswith(base_url):
                         relative_item_path = item_source_url[len(base_url):]
                     
-                    if relative_item_path and relative_item_path in self.SOURCE_CLEANING_RULES:
-                        rules = self.SOURCE_CLEANING_RULES[relative_item_path]
+                    if relative_item_path and relative_item_path in self.OURCE_SERVICES_CLEAN:
+                        rules = self.OURCE_SERVICES_CLEAN[relative_item_path]
                         rule_type = rules.get("type")
 
                         if rule_type == "list_of_dicts" and isinstance(content_to_save, list):
@@ -195,7 +155,7 @@ class CleaningDataViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="B. Retrieve cleaned data",
         description="Presenting cleaned data",
-        tags=["2. Data Cleaning"],
+        tags=["Data Cleaning"],
         responses={
             200: OpenApiResponse(
                 description="Cleaned data fetched successfully", 

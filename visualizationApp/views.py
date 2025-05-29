@@ -65,12 +65,11 @@ def calculate_descriptive_stats(data_list):
     }
 
 class VisualizationAnalysisViewSet(viewsets.ViewSet):
-    TRANSFORMATION_DATA_ENDPOINT_PATH = "/services/v1/transformation/collect"
     NUM_PREVIOUS_RUNS_FOR_TREND = 5
 
     def _get_source_data_url(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
-        return f"{base_url}{self.TRANSFORMATION_DATA_ENDPOINT_PATH}"
+        return f"{base_url}{self.SERVICES_VISUALIZATION_PATH}"
 
     def _get_interpretation(self, p_value, alpha=0.05, test_type="general"):
         if p_value is None:
@@ -81,9 +80,9 @@ class VisualizationAnalysisViewSet(viewsets.ViewSet):
             return f"Not significant (p >= {alpha}): No statistically significant {test_type} detected."
 
     @extend_schema(
-        summary="Analyze and perform statistical tests and store insights",
+        summary="A. Analyze and perform statistical tests and store insights",
         description=("Retrieve data from transformation endpoint and performs comprehensive analysis including"),
-        tags=["4. Data Visualization & Analysis"],
+        tags=["Data Visualization & Analysis"],
         request=None, 
         responses={
             201: OpenApiResponse(
@@ -100,7 +99,7 @@ class VisualizationAnalysisViewSet(viewsets.ViewSet):
             503: OpenApiResponse(description="Failed to contact the transformation data API.", response=CustomErrorResponseWrapperSerializer),
         }
     )
-    @action(detail=False, methods=["post"], url_path="analyze-and-store-advanced")
+    @action(detail=False, methods=["post"], url_path="analyze")
     def analyze_and_store_insights_advanced(self, request):
         source_data_url = self._get_source_data_url(request)
         
@@ -278,15 +277,15 @@ class VisualizationAnalysisViewSet(viewsets.ViewSet):
 
 
     @extend_schema(
-        summary="B. Retrieve stored visualization analyses",
+        summary="B. Retrieve stored visualization analysis",
         description="Fetches and returns a list of all stored analysis results.",
-        tags=["4. Data Visualization & Analysis"],
+        tags=["Data Visualization & Analysis"],
         responses={
             200: OpenApiResponse(description="Analysis results fetched successfully.", response=ListVisualizationDataResponseWrapperSerializer),
             500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer)
         }
     )
-    @action(detail=False, methods=["get"], url_path="results")
+    @action(detail=False, methods=["get"], url_path="collect")
     def list_analysis_results(self, request):
         try:
             queryset = VisualizationData.objects.all().order_by('-createdAt')

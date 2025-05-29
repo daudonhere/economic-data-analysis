@@ -59,14 +59,10 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Economy & Finances Trend Analytics",
+    "TITLE": "Economy & Finance Trend Analytics",
     "DESCRIPTION": "Trend analytic from various categories finance & economy for your reference.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    "CONTACT": {
-        "name": "Daud Yusup",
-        "email": "hellodadedaud@gmail.com",
-    },
     "LICENSE": {
         "name": "GPL-3.0 License",
         "url": "https://www.gnu.org/licenses/gpl-3.0.html",

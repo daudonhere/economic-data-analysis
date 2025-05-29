@@ -25,7 +25,7 @@ class AnalyticSentimentViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Most trend topics about fiscal economics",
         description="Returns fiscal economic data analysis.",
-        tags=["0. Economic Raw Data"],
+        tags=["Economic Raw Data"],
         responses={
             200: OpenApiResponse(description="Success response"),
             500: OpenApiResponse(description="Internal server error")
@@ -38,7 +38,7 @@ class AnalyticSentimentViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Data monetary economics and public responses",
         description="Returns monetary economic data analysis.",
-        tags=["0. Economic Raw Data"],
+        tags=["Economic Raw Data"],
         responses={
             200: OpenApiResponse(description="Success response"),
             500: OpenApiResponse(description="Internal server error")
@@ -51,7 +51,7 @@ class AnalyticSentimentViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="Most trend about macro economics",
         description="Return macro economic data analysis and public response",
-        tags=["0. Economic Raw Data"],
+        tags=["Economic Raw Data"],
         responses={
             200: OpenApiResponse(description="Success response"),
             500: OpenApiResponse(description="Internal server error")

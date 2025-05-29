@@ -7,6 +7,7 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse
 from configs.utils import success_response, error_response 
 from transformationApp.models import TransformationData
 from transformationApp.serializers import TransformationDataSerializer
+from configs.endpoint import SERVICES_TRANSFORMATION_PATH
 
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -44,16 +45,15 @@ def extract_text_from_json_content(data_content):
     return texts
 
 class DataTransformationViewSet(viewsets.ViewSet):
-    CLEANING_DATA_ENDPOINT_PATH = "/services/v1/cleaning/collect"
 
     def _get_cleaning_data_url(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
-        return f"{base_url}{self.CLEANING_DATA_ENDPOINT_PATH}"
+        return f"{base_url}{self.SERVICES_TRANSFORMATION_PATH}"
 
     @extend_schema(
         summary="A. Process transform data and store transformations",
         description=("Retrieve data and calculates TF-IDF based frequency"),
-        tags=["3. Data Transformation"],
+        tags=["Data Transformation"],
         responses={
             200: OpenApiResponse(
                 description="Data successfully transformed and stored",
@@ -176,7 +176,7 @@ class DataTransformationViewSet(viewsets.ViewSet):
     @extend_schema(
         summary="B. Retrieve transformation data",
         description="Retrieve a list of all transformation data records",
-        tags=["3. Data Transformation"],
+        tags=["Data Transformation"],
         responses={
             200: OpenApiResponse(
                 description="Transformation data fetched successfully.",
