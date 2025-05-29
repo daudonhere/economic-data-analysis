@@ -23,12 +23,12 @@ class AnalyticSentimentViewSet(viewsets.ViewSet):
             return error_response(message=str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @extend_schema(
-        summary="Most Trend Topics About Fiscal Economics Policy",
+        summary="Most trend topics about fiscal economics",
         description="Returns fiscal economic data analysis.",
-        tags=["Economic Raw Data"],
+        tags=["0. Economic Raw Data"],
         responses={
-            200: OpenApiResponse(description="Success Response"),
-            500: OpenApiResponse(description="Internal Server Error")
+            200: OpenApiResponse(description="Success response"),
+            500: OpenApiResponse(description="Internal server error")
         }
     )
     @action(detail=False, methods=["get"], url_path="fiscal")
@@ -36,12 +36,12 @@ class AnalyticSentimentViewSet(viewsets.ViewSet):
         return self._fetch_alpha_vantage_data(topics="economy_fiscal", success_message="Fiscal economy data fetched successfully")
 
     @extend_schema(
-        summary="Data Monetary Economics and Public Responses",
+        summary="Data monetary economics and public responses",
         description="Returns monetary economic data analysis.",
-        tags=["Economic Raw Data"],
+        tags=["0. Economic Raw Data"],
         responses={
-            200: OpenApiResponse(description="Success Response"),
-            500: OpenApiResponse(description="Internal Server Error")
+            200: OpenApiResponse(description="Success response"),
+            500: OpenApiResponse(description="Internal server error")
         }
     )
     @action(detail=False, methods=["get"], url_path="monetary")
@@ -49,12 +49,12 @@ class AnalyticSentimentViewSet(viewsets.ViewSet):
         return self._fetch_alpha_vantage_data(topics="economy_monetary", success_message="Monetary economy data fetched successfully")
 
     @extend_schema(
-        summary="Most Trend About Macro Economics",
+        summary="Most trend about macro economics",
         description="Return macro economic data analysis and public response",
-        tags=["Economic Raw Data"],
+        tags=["0. Economic Raw Data"],
         responses={
-            200: OpenApiResponse(description="Success Response"),
-            500: OpenApiResponse(description="Internal Server Error")
+            200: OpenApiResponse(description="Success response"),
+            500: OpenApiResponse(description="Internal server error")
         }
     )
     @action(detail=False, methods=["get"], url_path="macro")

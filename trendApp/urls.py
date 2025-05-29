@@ -4,7 +4,7 @@ from trendApp.views import SearchTrendViewSet
 
 router = DefaultRouter(trailing_slash=False)
 
-router.register(r'mining', SearchTrendViewSet, basename='mining')
+router.register(r'trending', SearchTrendViewSet, basename='trending')
 
 trendApp_urlpatterns = [
     path('', include(router.urls)),

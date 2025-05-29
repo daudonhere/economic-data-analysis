@@ -5,8 +5,8 @@ from rest_framework import status, viewsets, serializers as drf_serializers
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from configs.utils import success_response, error_response 
-from transformedApp.models import TransformedData
-from transformedApp.serializers import TransformedDataSerializer
+from transformationApp.models import TransformationData
+from transformationApp.serializers import TransformationDataSerializer
 
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -19,8 +19,8 @@ class BaseCustomResponseWrapperSerializer(drf_serializers.Serializer):
     code = drf_serializers.IntegerField()
     messages = drf_serializers.CharField()
 
-class TransformedDataListSuccessResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
-    data = TransformedDataSerializer(many=True, required=False, allow_null=True)
+class TransformationDataListSuccessResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+    data = TransformationDataSerializer(many=True, required=False, allow_null=True)
     status = drf_serializers.CharField(default="success")
 
 class CustomErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
@@ -36,7 +36,7 @@ def extract_text_from_json_content(data_content):
             elif isinstance(value, (dict, list)):
                 texts.extend(extract_text_from_json_content(value))
     elif isinstance(data_content, list):
-        for item_element in data_content: # Renamed 'item' to 'item_element' to avoid conflict
+        for item_element in data_content:
             if isinstance(item_element, str):
                 texts.append(item_element)
             elif isinstance(item_element, (dict, list)):
@@ -44,24 +44,20 @@ def extract_text_from_json_content(data_content):
     return texts
 
 class DataTransformationViewSet(viewsets.ViewSet):
-    CLEANING_DATA_ENDPOINT_PATH = "/services/v1/cleaning/collecting"
+    CLEANING_DATA_ENDPOINT_PATH = "/services/v1/cleaning/collect"
 
     def _get_cleaning_data_url(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
         return f"{base_url}{self.CLEANING_DATA_ENDPOINT_PATH}"
 
     @extend_schema(
-        summary="A. Process Cleaning Data and Store Transformations",
-        description=(
-            "Fetches data from the cleaning data endpoint, calculates TF-IDF based frequency "
-            "and percentage change, then stores each item as a new TransformedData record. "
-            "Requires scikit-learn for TF-IDF calculation."
-        ),
+        summary="A. Process transform data and store transformations",
+        description=("Retrieve data and calculates TF-IDF based frequency"),
         tags=["3. Data Transformation"],
         responses={
             200: OpenApiResponse(
-                description="Data successfully transformed and stored.",
-                response=TransformedDataListSuccessResponseWrapperSerializer
+                description="Data successfully transformed and stored",
+                response=TransformationDataListSuccessResponseWrapperSerializer
             ),
             400: OpenApiResponse(description="Bad request or validation error.", response=CustomErrorResponseWrapperSerializer),
             500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer),
@@ -123,7 +119,7 @@ class DataTransformationViewSet(viewsets.ViewSet):
                 except ValueError as e:
                     pass
 
-            created_transformed_data_objects = []
+            created_transformation_data_objects = []
             two_decimal_places = Decimal("0.01")
 
             with transaction.atomic():
@@ -133,7 +129,7 @@ class DataTransformationViewSet(viewsets.ViewSet):
                     current_calculated_frequency = document_frequencies[i]
                     
                     percentage_change = Decimal("0.00")
-                    previous_record = TransformedData.objects.filter(source=current_source).order_by('-createdAt').first()
+                    previous_record = TransformationData.objects.filter(source=current_source).order_by('-createdAt').first()
 
                     if previous_record and previous_record.frequency is not None:
                         prev_freq = previous_record.frequency
@@ -146,18 +142,18 @@ class DataTransformationViewSet(viewsets.ViewSet):
                         elif current_calculated_frequency > Decimal("0.00"):
                              percentage_change = Decimal("100.00")
 
-                    new_transformed_entry = TransformedData.objects.create(
+                    new_transformation_entry = TransformationData.objects.create(
                         content=current_content_json,
                         source=current_source,
                         frequency=current_calculated_frequency,
                         percentage=percentage_change
                     )
-                    created_transformed_data_objects.append(new_transformed_entry)
+                    created_transformation_data_objects.append(new_transformation_entry)
             
-            serializer = TransformedDataSerializer(created_transformed_data_objects, many=True)
+            serializer = TransformationDataSerializer(created_transformation_data_objects, many=True)
             return success_response(
                 data=serializer.data,
-                message=f"Successfully processed and stored {len(created_transformed_data_objects)} new transformed data records.",
+                message=f"Successfully processed and stored {len(created_transformation_data_objects)} new transformation data records.",
                 code=status.HTTP_200_OK
             )
 
@@ -178,30 +174,30 @@ class DataTransformationViewSet(viewsets.ViewSet):
             )
 
     @extend_schema(
-        summary="B. Retrieve Transformed Data",
-        description="Fetches and returns a list of all transformed data records.",
+        summary="B. Retrieve transformation data",
+        description="Retrieve a list of all transformation data records",
         tags=["3. Data Transformation"],
         responses={
             200: OpenApiResponse(
-                description="Transformed data fetched successfully.",
-                response=TransformedDataListSuccessResponseWrapperSerializer
+                description="Transformation data fetched successfully.",
+                response=TransformationDataListSuccessResponseWrapperSerializer
             ),
             500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer)
         }
     )
     @action(detail=False, methods=["get"], url_path="collect")
-    def list_transformed_data(self, request):
+    def list_transformation_data(self, request):
         try:
-            queryset = TransformedData.objects.all().order_by('-createdAt')
-            serializer = TransformedDataSerializer(queryset, many=True)
+            queryset = TransformationData.objects.all().order_by('-createdAt')
+            serializer = TransformationDataSerializer(queryset, many=True)
             return success_response(
                 data=serializer.data,
-                message="Transformed data fetched successfully.",
+                message="Transformation data fetched successfully.",
                 code=status.HTTP_200_OK
             )
         except Exception as e:
             return error_response(
-                message=f"Failed to fetch transformed data: {str(e)}",
+                message=f"Failed to fetch transformation data: {str(e)}",
                 data=[],
                 code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

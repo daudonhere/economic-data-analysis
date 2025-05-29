@@ -35,15 +35,14 @@ class FinancialDataViewSet(viewsets.ViewSet):
             return success_response(data=serializer.data, message=success_message)
         except requests.RequestException as e:
             return error_response(message=str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        # Serializer validation errors will be caught by DRF's default exception handler
 
     @extend_schema(
-        summary="Most Searched Stocks",
+        summary="Most searched stocks",
         description="Returns a list of the most searched stocks",
-        tags=["Finance Raw Data"],
+        tags=["0. Finance Raw Data"],
         responses={
             200: OpenApiResponse(response=StockDataSerializer(many=True)),
-            500: OpenApiResponse(description="Internal Server Error"),
+            500: OpenApiResponse(description="Internal server error"),
         },
     )
     @action(detail=False, methods=["get"], url_path="stocks")
@@ -56,12 +55,12 @@ class FinancialDataViewSet(viewsets.ViewSet):
         )
 
     @extend_schema(
-        summary="Market Highest Volume",
+        summary="Market highest volume",
         description="Returns a list of stocks with highest trading volume",
-        tags=["Finance Raw Data"],
+        tags=["0. Finance Raw Data"],
         responses={
             200: OpenApiResponse(response=MarketActiveStockSerializer(many=True)),
-            500: OpenApiResponse(description="Internal Server Error"),
+            500: OpenApiResponse(description="Internal server error"),
         },
     )
     @action(detail=False, methods=["get"], url_path="volume")
@@ -73,12 +72,12 @@ class FinancialDataViewSet(viewsets.ViewSet):
         )
 
     @extend_schema(
-        summary="Most Sector Performance",
+        summary="Most sector performance",
         description="Returns performance change for each sector",
-        tags=["Finance Raw Data"],
+        tags=["0. Finance Raw Data"],
         responses={
             200: OpenApiResponse(response=SectorPerformanceSerializer(many=True)),
-            500: OpenApiResponse(description="Internal Server Error"),
+            500: OpenApiResponse(description="Internal server error"),
         },
     )
     @action(detail=False, methods=["get"], url_path="sector")
@@ -90,12 +89,12 @@ class FinancialDataViewSet(viewsets.ViewSet):
         )
 
     @extend_schema(
-        summary="Most Traded Cryptocurrencies",
+        summary="Most traded cryptocurrencies",
         description="Returns a list of most traded cryptocurrency",
-        tags=["Finance Raw Data"],
+        tags=["0. Finance Raw Data"],
         responses={
             200: OpenApiResponse(response=CryptoDataSerializer(many=True)),
-            500: OpenApiResponse(description="Internal Server Error"),
+            500: OpenApiResponse(description="Internal server error"),
         },
     )
     @action(detail=False, methods=["get"], url_path="crypto")
@@ -108,9 +107,9 @@ class FinancialDataViewSet(viewsets.ViewSet):
         )
 
     @extend_schema(
-        summary="Most Stocks Downtrend",
+        summary="Most stocks downtrend",
         description="Returns a list of stocks with the highest negative price changes",
-        tags=["Finance Raw Data"],
+        tags=["0. Finance Raw Data"],
         responses={
             200: OpenApiResponse(response=DowntrendStockSerializer(many=True)),
             500: OpenApiResponse(description="Internal Server Error"),

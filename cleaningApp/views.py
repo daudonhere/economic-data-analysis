@@ -21,7 +21,7 @@ class CustomErrorResponseWrapperSerializer(drf_serializers.Serializer):
     messages = drf_serializers.CharField()
 
 class CleaningDataViewSet(viewsets.ViewSet):
-    SOURCE_API_URL_PATH = "/services/v1/ingestion/collecting"
+    SOURCE_API_URL_PATH = "/services/v1/ingestion/collect"
     TARGET_SOURCE_PATHS_RELATIVE = [
         "/services/v1/economy/fiscal",
         "/services/v1/economy/macro",
@@ -69,7 +69,7 @@ class CleaningDataViewSet(viewsets.ViewSet):
         tags=["2. Data Cleaning"],
         responses={
             200: OpenApiResponse(
-                description="Data Successfully Processed and Stored",
+                description="Data successfully processed and stored",
                 response=CustomSuccessResponseWrapperSerializer 
             ),
             400: OpenApiResponse(description="Bad request", response=CustomErrorResponseWrapperSerializer),
@@ -199,7 +199,7 @@ class CleaningDataViewSet(viewsets.ViewSet):
         responses={
             200: OpenApiResponse(
                 description="Cleaned data fetched successfully", 
-                response=CustomSuccessResponseWrapperSerializer # Menggunakan serializer pembungkus
+                response=CustomSuccessResponseWrapperSerializer
             ),
             500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer)
         }
