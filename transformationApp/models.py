@@ -1,7 +1,7 @@
 import uuid
 from django.db import models
 
-class TransformedData(models.Model):
+class TransformationData(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     content = models.JSONField()
     source = models.URLField()
@@ -15,4 +15,4 @@ class TransformedData(models.Model):
     updatedAt = models.DateTimeField(auto_now=True) 
 
     class Meta:
-        db_table = "tb_transformed_data"
+        db_table = "tb_transformation_data"

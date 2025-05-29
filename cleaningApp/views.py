@@ -21,7 +21,7 @@ class CustomErrorResponseWrapperSerializer(drf_serializers.Serializer):
     messages = drf_serializers.CharField()
 
 class CleaningDataViewSet(viewsets.ViewSet):
-    SOURCE_API_URL_PATH = "/services/v1/ingestion/collecting"
+    SOURCE_API_URL_PATH = "/services/v1/ingestion/collect"
     TARGET_SOURCE_PATHS_RELATIVE = [
         "/services/v1/economy/fiscal",
         "/services/v1/economy/macro",

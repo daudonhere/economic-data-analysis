@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'trendApp',
     'cleaningApp',
     'ingestionApp',
-    'transformedApp',
+    'transformationApp',
 ]
 
 REST_FRAMEWORK = {

@@ -8,7 +8,7 @@ from economyApp.urls import economyApp_urlpatterns
 from trendApp.urls import trendApp_urlpatterns
 from ingestionApp.urls import ingestionApp_urlpatterns
 from cleaningApp.urls import cleaningApp_urlpatterns
-from transformedApp.urls import transformedApp_urlpatterns
+from transformationApp.urls import transformationApp_urlpatterns
 
 handler400 = lambda request, exception: ErrorPage(request, exception, 400)
 handler403 = lambda request, exception: ErrorPage(request, exception, 403)
@@ -30,7 +30,7 @@ urlpatterns = [
     path("services/v1/", include((trendApp_urlpatterns, "trendApp"), namespace="trendApp")),
     path("services/v1/", include((cleaningApp_urlpatterns, "cleaningApp"), namespace="cleaningApp")),
     path("services/v1/", include((ingestionApp_urlpatterns, "ingestionApp"), namespace="ingestionApp")),
-    path("services/v1/", include((transformedApp_urlpatterns, "transformedApp"), namespace="transformedApp")),
+    path("services/v1/", include((transformationApp_urlpatterns, "transformationApp"), namespace="transformationApp")),
     path("services/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("services/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("services/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),

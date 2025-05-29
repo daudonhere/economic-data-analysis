@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class TransformedappConfig(AppConfig):
+class TransformationappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'transformedApp'
+    name = 'transformationApp'
