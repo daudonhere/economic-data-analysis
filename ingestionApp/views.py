@@ -41,21 +41,22 @@ class ListIngestedSuccessResponseWrapperSerializer(BaseCustomResponseWrapperSeri
     data = GetIngestionDataSerializer(many=True)
     status = drf_serializers.CharField(default="success")
 
-class CustomErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+class IngestionErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
     data = drf_serializers.JSONField(required=False, allow_null=True)
     status = drf_serializers.CharField(default="error")
 
 
 class IngestionDataViewSet(viewsets.ViewSet):
-
+    serializer_class = IngestionDataSerializer
     @extend_schema(
-        summary="A. Collect and store data",
+        summary="Collect and store data",
         description="Collect all data sources and store them",
         tags=["Data Ingestion"],
+        request=None,
         responses={
             200: OpenApiResponse(response=FetchStore200ResponseWrapperSerializer, description="All data ingested successfully."),
             207: OpenApiResponse(response=FetchStore207ResponseWrapperSerializer, description="Partial success, some endpoints failed."),
-            500: OpenApiResponse(response=CustomErrorResponseWrapperSerializer, description="All API calls failed.")
+            500: OpenApiResponse(response=IngestionErrorResponseWrapperSerializer, description="All API calls failed.")
         }
     )
     @action(detail=False, methods=["post"], url_path="process")
@@ -64,7 +65,7 @@ class IngestionDataViewSet(viewsets.ViewSet):
         success_data = []
         fail_logs = []
 
-        for endpoint in self.SERVICES_URL:
+        for endpoint in SERVICES_URL:
             full_url = f"{base_url}{endpoint}"
             try:
                 response = requests.get(full_url)
@@ -127,12 +128,12 @@ class IngestionDataViewSet(viewsets.ViewSet):
         )
         
     @extend_schema(
-        summary="B. Retrieve ingested data",
+        summary="Retrieve ingested data",
         description="Presenting collected data",
         tags=["Data Ingestion"],
         responses={
             200: OpenApiResponse(response=ListIngestedSuccessResponseWrapperSerializer, description="Data fetched successfully."),
-            500: OpenApiResponse(response=CustomErrorResponseWrapperSerializer, description="Internal server error while fetching data.")
+            500: OpenApiResponse(response=IngestionErrorResponseWrapperSerializer, description="Internal server error while fetching data.")
         }
     )
     @action(detail=False, methods=["get"], url_path="collect")

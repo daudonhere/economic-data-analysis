@@ -8,8 +8,9 @@ from rest_framework import status, viewsets, serializers as drf_serializers
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from configs.utils import success_response, error_response 
-from .models import VisualizationData
-from .serializers import VisualizationDataSerializer
+from visualizationApp.models import VisualizationData
+from visualizationApp.serializers import VisualizationDataSerializer
+from configs.endpoint import SERVICES_VISUALIZATION_PATH
 
 class BaseCustomResponseWrapperSerializer(drf_serializers.Serializer):
     status = drf_serializers.CharField()
@@ -24,7 +25,7 @@ class ListVisualizationDataResponseWrapperSerializer(BaseCustomResponseWrapperSe
     data = VisualizationDataSerializer(many=True, required=False, allow_null=True)
     status = drf_serializers.CharField(default="success")
 
-class CustomErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+class VisualizationErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
     data = drf_serializers.JSONField(required=False, allow_null=True)
     status = drf_serializers.CharField(default="error")
     
@@ -65,11 +66,12 @@ def calculate_descriptive_stats(data_list):
     }
 
 class VisualizationAnalysisViewSet(viewsets.ViewSet):
+    serializer_class = VisualizationDataSerializer
     NUM_PREVIOUS_RUNS_FOR_TREND = 5
 
     def _get_source_data_url(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
-        return f"{base_url}{self.SERVICES_VISUALIZATION_PATH}"
+        return f"{base_url}{SERVICES_VISUALIZATION_PATH}"
 
     def _get_interpretation(self, p_value, alpha=0.05, test_type="general"):
         if p_value is None:
@@ -80,7 +82,7 @@ class VisualizationAnalysisViewSet(viewsets.ViewSet):
             return f"Not significant (p >= {alpha}): No statistically significant {test_type} detected."
 
     @extend_schema(
-        summary="A. Analyze and perform statistical tests and store insights",
+        summary="Analyze and perform statistical tests and store insights",
         description=("Retrieve data from transformation endpoint and performs comprehensive analysis including"),
         tags=["Data Visualization & Analysis"],
         request=None, 
@@ -93,10 +95,10 @@ class VisualizationAnalysisViewSet(viewsets.ViewSet):
                 description="No data from transformation endpoint to analyze, or no previous analysis to compare. Basic analysis record created.",
                 response=SingleVisualizationDataResponseWrapperSerializer
             ),
-            400: OpenApiResponse(description="Bad request.", response=CustomErrorResponseWrapperSerializer),
-            500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer),
-            502: OpenApiResponse(description="Error from the transformation data API.", response=CustomErrorResponseWrapperSerializer),
-            503: OpenApiResponse(description="Failed to contact the transformation data API.", response=CustomErrorResponseWrapperSerializer),
+            400: OpenApiResponse(description="Bad request.", response=VisualizationErrorResponseWrapperSerializer),
+            500: OpenApiResponse(description="Internal server error.", response=VisualizationErrorResponseWrapperSerializer),
+            502: OpenApiResponse(description="Error from the transformation data API.", response=VisualizationErrorResponseWrapperSerializer),
+            503: OpenApiResponse(description="Failed to contact the transformation data API.", response=VisualizationErrorResponseWrapperSerializer),
         }
     )
     @action(detail=False, methods=["post"], url_path="analyze")
@@ -277,12 +279,12 @@ class VisualizationAnalysisViewSet(viewsets.ViewSet):
 
 
     @extend_schema(
-        summary="B. Retrieve stored visualization analysis",
+        summary="Retrieve stored visualization analysis",
         description="Fetches and returns a list of all stored analysis results.",
         tags=["Data Visualization & Analysis"],
         responses={
             200: OpenApiResponse(description="Analysis results fetched successfully.", response=ListVisualizationDataResponseWrapperSerializer),
-            500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer)
+            500: OpenApiResponse(description="Internal server error.", response=VisualizationErrorResponseWrapperSerializer)
         }
     )
     @action(detail=False, methods=["get"], url_path="collect")

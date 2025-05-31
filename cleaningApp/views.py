@@ -9,40 +9,41 @@ from cleaningApp.models import CleaningData
 from cleaningApp.serializers import GetCleaningDataSerializer
 from configs.endpoint import SOURCE_SERVICES_URL, SOURCE_SERVICES_TARGET, SOURCE_SERVICES_CLEAN
 
-class CustomSuccessResponseWrapperSerializer(drf_serializers.Serializer):
+class CleaningSuccessResponseWrapperSerializer(drf_serializers.Serializer):
     data = GetCleaningDataSerializer(many=True, required=False, allow_null=True)
     status = drf_serializers.CharField(default="success")
     code = drf_serializers.IntegerField()
     messages = drf_serializers.CharField()
 
-class CustomErrorResponseWrapperSerializer(drf_serializers.Serializer):
+class CleaningErrorResponseWrapperSerializer(drf_serializers.Serializer):
     data = drf_serializers.JSONField(required=False, allow_null=True)
     status = drf_serializers.CharField(default="error")
     code = drf_serializers.IntegerField()
     messages = drf_serializers.CharField()
 
 class CleaningDataViewSet(viewsets.ViewSet):
-
+    serializer_class = GetCleaningDataSerializer
     @extend_schema(
-        summary="A. Clean and store data",
+        summary="Clean and store data",
         description=("Data cleaning process"),
         tags=["Data Cleaning"],
+        request=None,
         responses={
             200: OpenApiResponse(
                 description="Data successfully processed and stored",
-                response=CustomSuccessResponseWrapperSerializer 
+                response=CleaningSuccessResponseWrapperSerializer 
             ),
-            400: OpenApiResponse(description="Bad request", response=CustomErrorResponseWrapperSerializer),
-            500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer),
-            502: OpenApiResponse(description="Error from source API.", response=CustomErrorResponseWrapperSerializer),
-            503: OpenApiResponse(description="Failed to contact source API.", response=CustomErrorResponseWrapperSerializer)
+            400: OpenApiResponse(description="Bad request", response=CleaningErrorResponseWrapperSerializer),
+            500: OpenApiResponse(description="Internal server error.", response=CleaningErrorResponseWrapperSerializer),
+            502: OpenApiResponse(description="Error from source API.", response=CleaningErrorResponseWrapperSerializer),
+            503: OpenApiResponse(description="Failed to contact source API.", response=CleaningErrorResponseWrapperSerializer)
         }
     )
     @action(detail=False, methods=["post"], url_path="process")
     def list_simple_ingested_data(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
-        source_api_full_url = f"{base_url}{self.SOURCE_SERVICES_URL}"
-        target_source_full_urls = {f"{base_url}{path}" for path in self.SOURCE_SERVICES_TARGET}
+        source_api_full_url = f"{base_url}{SOURCE_SERVICES_URL}"
+        target_source_full_urls = {f"{base_url}{path}" for path in SOURCE_SERVICES_TARGET}
 
         try:
             response = requests.get(source_api_full_url, timeout=10)
@@ -74,8 +75,8 @@ class CleaningDataViewSet(viewsets.ViewSet):
                     if item_source_url.startswith(base_url):
                         relative_item_path = item_source_url[len(base_url):]
                     
-                    if relative_item_path and relative_item_path in self.OURCE_SERVICES_CLEAN:
-                        rules = self.OURCE_SERVICES_CLEAN[relative_item_path]
+                    if relative_item_path and relative_item_path in SOURCE_SERVICES_CLEAN:
+                        rules = SOURCE_SERVICES_CLEAN[relative_item_path]
                         rule_type = rules.get("type")
 
                         if rule_type == "list_of_dicts" and isinstance(content_to_save, list):
@@ -153,15 +154,15 @@ class CleaningDataViewSet(viewsets.ViewSet):
             return error_response(message=f"An unexpected error occurred: {str(e)}", code=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     @extend_schema(
-        summary="B. Retrieve cleaned data",
+        summary="Retrieve cleaned data",
         description="Presenting cleaned data",
         tags=["Data Cleaning"],
         responses={
             200: OpenApiResponse(
                 description="Cleaned data fetched successfully", 
-                response=CustomSuccessResponseWrapperSerializer
+                response=CleaningSuccessResponseWrapperSerializer
             ),
-            500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer)
+            500: OpenApiResponse(description="Internal server error.", response=CleaningErrorResponseWrapperSerializer)
         }
     )
     @action(detail=False, methods=["get"], url_path="collect")
