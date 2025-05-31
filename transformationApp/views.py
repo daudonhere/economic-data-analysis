@@ -7,6 +7,7 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse
 from configs.utils import success_response, error_response 
 from transformationApp.models import TransformationData
 from transformationApp.serializers import TransformationDataSerializer
+from configs.endpoint import SERVICES_TRANSFORMATION_PATH
 
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -23,7 +24,7 @@ class TransformationDataListSuccessResponseWrapperSerializer(BaseCustomResponseW
     data = TransformationDataSerializer(many=True, required=False, allow_null=True)
     status = drf_serializers.CharField(default="success")
 
-class CustomErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+class TransformationErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
     data = drf_serializers.JSONField(required=False, allow_null=True)
     status = drf_serializers.CharField(default="error")
 
@@ -44,26 +45,26 @@ def extract_text_from_json_content(data_content):
     return texts
 
 class DataTransformationViewSet(viewsets.ViewSet):
-    CLEANING_DATA_ENDPOINT_PATH = "/services/v1/cleaning/collect"
-
+    serializer_class = TransformationDataSerializer
     def _get_cleaning_data_url(self, request):
         base_url = request.build_absolute_uri('/')[:-1]
-        return f"{base_url}{self.CLEANING_DATA_ENDPOINT_PATH}"
+        return f"{base_url}{SERVICES_TRANSFORMATION_PATH}"
 
     @extend_schema(
-        summary="A. Process transform data and store transformations",
+        summary="Process transform data and store transformations",
         description=("Retrieve data and calculates TF-IDF based frequency"),
-        tags=["3. Data Transformation"],
+        tags=["Data Transformation"],
+        request=None,
         responses={
             200: OpenApiResponse(
                 description="Data successfully transformed and stored",
                 response=TransformationDataListSuccessResponseWrapperSerializer
             ),
-            400: OpenApiResponse(description="Bad request or validation error.", response=CustomErrorResponseWrapperSerializer),
-            500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer),
-            502: OpenApiResponse(description="Error from the cleaning data API.", response=CustomErrorResponseWrapperSerializer),
-            503: OpenApiResponse(description="Failed to contact the cleaning data API.", response=CustomErrorResponseWrapperSerializer),
-            501: OpenApiResponse(description="TF-IDF calculation engine (scikit-learn) not available.", response=CustomErrorResponseWrapperSerializer)
+            400: OpenApiResponse(description="Bad request or validation error.", response=TransformationErrorResponseWrapperSerializer),
+            500: OpenApiResponse(description="Internal server error.", response=TransformationErrorResponseWrapperSerializer),
+            502: OpenApiResponse(description="Error from the cleaning data API.", response=TransformationErrorResponseWrapperSerializer),
+            503: OpenApiResponse(description="Failed to contact the cleaning data API.", response=TransformationErrorResponseWrapperSerializer),
+            501: OpenApiResponse(description="TF-IDF calculation engine (scikit-learn) not available.", response=TransformationErrorResponseWrapperSerializer)
         }
     )
     @action(detail=False, methods=["post"], url_path="process")
@@ -174,15 +175,15 @@ class DataTransformationViewSet(viewsets.ViewSet):
             )
 
     @extend_schema(
-        summary="B. Retrieve transformation data",
+        summary="Retrieve transformation data",
         description="Retrieve a list of all transformation data records",
-        tags=["3. Data Transformation"],
+        tags=["Data Transformation"],
         responses={
             200: OpenApiResponse(
                 description="Transformation data fetched successfully.",
                 response=TransformationDataListSuccessResponseWrapperSerializer
             ),
-            500: OpenApiResponse(description="Internal server error.", response=CustomErrorResponseWrapperSerializer)
+            500: OpenApiResponse(description="Internal server error.", response=TransformationErrorResponseWrapperSerializer)
         }
     )
     @action(detail=False, methods=["get"], url_path="collect")
