@@ -5,11 +5,26 @@ import os
 import requests
 from dotenv import load_dotenv
 from configs.utils import success_response, error_response
+# Assuming common serializers might be used for error responses in schema eventually
+# from common.serializers import ErrorResponseSerializer
 
 load_dotenv()
 
 ALPHA_API_KEY = os.getenv("ALPHA_API_KEY")
 ALPHA_BASE_URL = os.getenv("ALPHA_BASE_URL")
+
+def _generate_economic_schema(summary: str, description: str):
+    """Helper function to generate extend_schema arguments for economic data endpoints."""
+    return extend_schema(
+        summary=summary,
+        description=description,
+        tags=["Economic Raw Data"],
+        responses={
+            200: OpenApiResponse(description="Success response"),
+            # 500: OpenApiResponse(description="Internal server error", response=ErrorResponseSerializer) # Example if using common error serializer
+            500: OpenApiResponse(description="Internal server error")
+        }
+    )
 
 class AnalyticSentimentViewSet(viewsets.ViewSet):
     def _fetch_alpha_vantage_data(self, topics: str, success_message: str):
@@ -22,40 +37,25 @@ class AnalyticSentimentViewSet(viewsets.ViewSet):
         except requests.RequestException as e:
             return error_response(message=str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @extend_schema(
+    @_generate_economic_schema(
         summary="Most trend topics about fiscal economics",
-        description="Returns fiscal economic data analysis.",
-        tags=["Economic Raw Data"],
-        responses={
-            200: OpenApiResponse(description="Success response"),
-            500: OpenApiResponse(description="Internal server error")
-        }
+        description="Returns fiscal economic data analysis."
     )
     @action(detail=False, methods=["get"], url_path="fiscal")
     def get_economy_fiscal_sentiment(self, request):
         return self._fetch_alpha_vantage_data(topics="economy_fiscal", success_message="Fiscal economy data fetched successfully")
 
-    @extend_schema(
+    @_generate_economic_schema(
         summary="Data monetary economics and public responses",
-        description="Returns monetary economic data analysis.",
-        tags=["Economic Raw Data"],
-        responses={
-            200: OpenApiResponse(description="Success response"),
-            500: OpenApiResponse(description="Internal server error")
-        }
+        description="Returns monetary economic data analysis."
     )
     @action(detail=False, methods=["get"], url_path="monetary")
     def get_economy_monetary_sentiment(self, request):
         return self._fetch_alpha_vantage_data(topics="economy_monetary", success_message="Monetary economy data fetched successfully")
 
-    @extend_schema(
+    @_generate_economic_schema(
         summary="Most trend about macro economics",
-        description="Return macro economic data analysis and public response",
-        tags=["Economic Raw Data"],
-        responses={
-            200: OpenApiResponse(description="Success response"),
-            500: OpenApiResponse(description="Internal server error")
-        }
+        description="Return macro economic data analysis and public response"
     )
     @action(detail=False, methods=["get"], url_path="macro")
     def get_economy_macro_sentiment(self, request):

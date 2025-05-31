@@ -1,8 +1,7 @@
-import uuid
 from django.db import models
+from common.models import BaseModel
 
-class VisualizationData(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+class VisualizationData(BaseModel):
     analyzed_endpoint = models.CharField(max_length=255)
     input_transformed_data = models.JSONField(default=list) 
     all_phrases_analysis = models.JSONField(default=list) 
@@ -11,8 +10,6 @@ class VisualizationData(models.Model):
     per_source_stats = models.JSONField(default=dict)
     probabilistic_insights = models.JSONField(default=dict, null=True, blank=True)
     inferential_stats_summary = models.JSONField(default=dict, null=True, blank=True)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "tb_visualization_data"

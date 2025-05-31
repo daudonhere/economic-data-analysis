@@ -1,10 +1,9 @@
 from django.db import models
+from common.models import BaseModel
 
-class IngestionData(models.Model):
+class IngestionData(BaseModel):
     content = models.JSONField()
     source = models.CharField(max_length=255)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'tb_ingestion_data'

@@ -4,23 +4,17 @@ from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, OpenApiResponse
+from common.serializers import SuccessResponseSerializer, ErrorResponseSerializer
+from common.views import ListModelMixin # Import the mixin
 from configs.utils import success_response, error_response
 from ingestionApp.models import IngestionData
 from ingestionApp.serializers import IngestionDataSerializer, GetIngestionDataSerializer
 from rest_framework import serializers as drf_serializers
 from configs.endpoint import SERVICES_URL
 
-class BaseCustomResponseWrapperSerializer(drf_serializers.Serializer):
-    status = drf_serializers.CharField()
-    code = drf_serializers.IntegerField()
-    messages = drf_serializers.CharField()
-
+# Payload serializers - these define the structure of the 'data' field
 class IngestedDataPayloadSerializer(drf_serializers.Serializer):
     ingested_data = IngestionDataSerializer(many=True)
-
-class FetchStore200ResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
-    data = IngestedDataPayloadSerializer()
-    status = drf_serializers.CharField(default="success")
 
 class FailedLogEntrySerializer(drf_serializers.Serializer):
     url = drf_serializers.URLField()
@@ -33,30 +27,33 @@ class IngestedDataPartialPayloadSerializer(drf_serializers.Serializer):
     failed_logs = FailedLogEntrySerializer(many=True)
     ingested_data = IngestionDataSerializer(many=True)
 
-class FetchStore207ResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+# Response wrapper serializers using common.serializers
+class FetchStore200CustomResponseSerializer(SuccessResponseSerializer):
+    data = IngestedDataPayloadSerializer()
+
+class FetchStore207CustomResponseSerializer(SuccessResponseSerializer):
     data = IngestedDataPartialPayloadSerializer()
-    status = drf_serializers.CharField(default="success") 
 
-class ListIngestedSuccessResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
+class ListIngestedDataSuccessCustomSerializer(SuccessResponseSerializer):
     data = GetIngestionDataSerializer(many=True)
-    status = drf_serializers.CharField(default="success")
 
-class IngestionErrorResponseWrapperSerializer(BaseCustomResponseWrapperSerializer):
-    data = drf_serializers.JSONField(required=False, allow_null=True)
-    status = drf_serializers.CharField(default="error")
+class IngestionDataViewSet(ListModelMixin, viewsets.ViewSet): # Add ListModelMixin
+    # serializer_class for the ViewSet, used by ListModelMixin.
+    # The 'process' action uses IngestionDataSerializer explicitly for its instances.
+    serializer_class = GetIngestionDataSerializer
 
+    def get_queryset(self): # Implement get_queryset
+        return IngestionData.objects.all()
 
-class IngestionDataViewSet(viewsets.ViewSet):
-    serializer_class = IngestionDataSerializer
     @extend_schema(
         summary="Collect and store data",
         description="Collect all data sources and store them",
         tags=["Data Ingestion"],
         request=None,
         responses={
-            200: OpenApiResponse(response=FetchStore200ResponseWrapperSerializer, description="All data ingested successfully."),
-            207: OpenApiResponse(response=FetchStore207ResponseWrapperSerializer, description="Partial success, some endpoints failed."),
-            500: OpenApiResponse(response=IngestionErrorResponseWrapperSerializer, description="All API calls failed.")
+            200: OpenApiResponse(response=FetchStore200CustomResponseSerializer, description="All data ingested successfully."),
+            207: OpenApiResponse(response=FetchStore207CustomResponseSerializer, description="Partial success, some endpoints failed."),
+            500: OpenApiResponse(response=ErrorResponseSerializer, description="All API calls failed.")
         }
     )
     @action(detail=False, methods=["post"], url_path="process")
@@ -132,25 +129,13 @@ class IngestionDataViewSet(viewsets.ViewSet):
         description="Presenting collected data",
         tags=["Data Ingestion"],
         responses={
-            200: OpenApiResponse(response=ListIngestedSuccessResponseWrapperSerializer, description="Data fetched successfully."),
-            500: OpenApiResponse(response=IngestionErrorResponseWrapperSerializer, description="Internal server error while fetching data.")
+            200: OpenApiResponse(response=ListIngestedDataSuccessCustomSerializer, description="Data fetched successfully."),
+            500: OpenApiResponse(response=ErrorResponseSerializer, description="Internal server error while fetching data.")
         }
     )
     @action(detail=False, methods=["get"], url_path="collect")
     def list_simple_ingested_data(self, request):
-        try:
-            queryset = IngestionData.objects.all().order_by('-createdAt')
-            serializer = GetIngestionDataSerializer(queryset, many=True)
-
-            return success_response(
-                data=serializer.data,
-                message="Data fetched successfully.",
-                code=status.HTTP_200_OK
-            )
-
-        except Exception as e:
-            return error_response(
-                message=f"Failed to fetch data: {str(e)}",
-                data=[],
-                code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # The schema is preserved from the original method.
+        # The core logic is now delegated to the mixin.
+        # Default ordering by '-createdAt' in mixin matches original.
+        return self._list_all_items(request)

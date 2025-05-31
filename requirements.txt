@@ -1,119 +1,28 @@
-argcomplete==3.6.2
-asgiref==3.8.1
-attrs==25.3.0
-babel==2.17.0
-beautifulsoup4==4.13.4
-blivet==3.11.0
-blivet-gui==2.6.0
-Brlapi==0.8.5
-certifi==2025.4.26
-cffi==1.17.0
-charset-normalizer==3.4.2
-click==8.1.7
-click-plugins==1.1.1
-crypt_r==3.13.1
-cupshelpers==1.0
-dasbus==1.7
-dbus-python==1.3.2
-distlib==0.3.8
-distro==1.9.0
 Django==5.2.1
-django-cors-headers==4.7.0
 djangorestframework==3.16.0
-dnf==4.23.0
 drf-spectacular==0.28.0
-drf-yasg==1.21.10
-fedora-third-party==0.10
-file-magic==0.4.0
-filelock==3.15.4
-fros==1.1
-gbinder-python==1.1.2
-gunicorn==23.0.0
-humanize==4.9.0
-idna==3.10
-inflection==0.5.1
-iso639==0.1.4
-joblib==1.5.1
-jsonschema==4.23.0
-jsonschema-specifications==2025.4.1
-langtable==0.0.68
-libcomps==0.1.21
-libdnf==0.74.0
-louis==3.28.0
-lxml==5.4.0
-nftables==0.1
-numpy==2.2.5
-olefile==0.47
-packaging==24.2
-pandas==2.2.3
-perf==0.1
-pexpect==4.9.0
-pid==2.2.3
-pillow==11.0.0
-platformdirs==4.2.2
-ply==3.11
-productmd==1.45
-progressbar2==3.53.2
-psycopg==3.2.6
-psycopg-binary==3.2.6
-psycopg-pool==3.2.6
-psycopg2==2.9.10
-psycopg2-binary==2.9.10
-ptyprocess==0.7.0
-pwquality==1.4.5
-pycairo==1.25.1
-pyclip==0.7.0
-pycparser==2.20
-pycups==2.0.4
-pyenchant==3.2.2
-pygit2==1.17.0
-PyGObject==3.48.2
-pyinotify==0.9.6
-pykickstart==3.58
-pyparted==3.13.0
-PySocks==1.7.1
-python-augeas==1.1.0
-python-dateutil==2.9.0.post0
-python-dotenv==1.1.0
-python-linux-procfs==0.7.3
-python-meh==0.52
-python-pam==2.0.2
-python-utils==3.7.0
-pytrends==4.9.2
-pytz==2025.2
-pyudev==0.24.3
-pyxdg==0.27
-PyYAML==6.0.2
-pyynl @ file:///builddir/build/BUILD/kernel-6.14.6-build/kernel-6.14.6/linux-6.14.6-200.fc41.x86_64/tools/net/ynl
-rapidfuzz==3.5.2
-referencing==0.36.2
-regex==2024.11.6
 requests==2.32.3
-requests-file==2.0.0
-requests-ftp==0.3.1
-rpds-py==0.24.0
-rpm==4.20.1
-rpmautospec==0.8.1
-rpmautospec-core==0.1.5
+python-dotenv==1.1.0
+pytrends==4.9.2
 scikit-learn==1.6.1
+numpy==2.2.5
 scipy==1.15.3
-selinux @ file:///builddir/build/BUILD/libselinux-3.7-build/libselinux-3.7/src
-sepolicy @ file:///builddir/build/BUILD/policycoreutils-3.7-build/selinux-3.7/python/sepolicy
-setools==4.5.1
-setuptools==69.2.0
-simpleaudio==1.0.4
-simpleline==1.9.0
-six==1.17.0
-sos==4.8.2
-soupsieve==2.7
-sqlparse==0.5.3
-systemd-python==235
-threadpoolctl==3.6.0
-typing_extensions==4.12.2
-tzdata==2025.2
-ufw==0.35
-uritemplate==4.1.1
-urllib3==2.4.0
-virtualenv==20.21.1
+psycopg2-binary==2.9.10
+gunicorn==23.0.0
+# Added based on previous requirements.txt and potential use
+asgiref==3.8.1 # Django dependency
+django-cors-headers==4.7.0 # Common for web apps
+drf-yasg==1.21.10 # Alternative to drf-spectacular, often used together or one chosen
+# Dependencies for pandas, numpy, scikit-learn if not covered by their direct install
+python-dateutil # pandas dependency
+pytz # pandas dependency
+# Common utilities
+six # often a dependency
+sqlparse # Django dependency
+tzdata # timezone support
+uritemplate # drf-spectacular dependency
+packaging # drf-spectacular dependency
+PyYAML # drf-spectacular dependency
+inflection # drf-spectacular dependency
+# Keep whitenoise as it's common for serving static files with Django
 whitenoise==6.9.0
-xkbregistry==0.3

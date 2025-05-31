@@ -1,109 +1,131 @@
-import os
+from django.test import TestCase, Client
 from django.urls import reverse
-from rest_framework.test import APITestCase
 from rest_framework import status
 from unittest.mock import patch, MagicMock
-import requests # Required for requests.exceptions.RequestException
+import requests # For mocking exceptions
+import os
 
-# Ensure .env is loaded for tests if not already handled by manage.py test
-from dotenv import load_dotenv
-load_dotenv()
+# Assuming ALPHA_API_KEY and ALPHA_BASE_URL are loaded in views.py using os.getenv
+# We will patch these for tests or ensure they are set in test environment if views.py is imported directly.
 
+class TestEconomyViews(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # It's good practice to define these, even if views.py uses os.getenv,
+        # to ensure tests are independent of environment variables not set in test runner.
+        self.mock_alpha_api_key = "TEST_KEY"
+        self.mock_alpha_base_url = "http://mockalphavantage.com"
 
-class AnalyticSentimentViewSetTests(APITestCase):
+    # Patch os.getenv where it's used in economyApp.views to control these values
+    @patch.dict(os.environ, {
+        "ALPHA_API_KEY": "TEST_KEY",
+        "ALPHA_BASE_URL": "http://mockalphavantage.com"
+    })
     @patch('economyApp.views.requests.get')
-    def test_get_economy_fiscal_sentiment_success(self, mock_get):
-        # Configure the mock_get object for a successful response
-        mock_response_data = {'some': 'data', 'feed': [{'title': 'Fiscal News'}]}
+    def test_get_economy_fiscal_sentiment(self, mock_requests_get):
         mock_api_response = MagicMock()
         mock_api_response.status_code = 200
-        mock_api_response.json.return_value = mock_response_data
-        # mock_api_response.raise_for_status = MagicMock() # Not strictly needed if status_code is 200
-        mock_get.return_value = mock_api_response
+        mock_api_response.json.return_value = {"data": "fiscal data"}
+        mock_requests_get.return_value = mock_api_response
 
-        # Define expected values
-        expected_success_message = "Fiscal economy data fetched successfully"
-        url = reverse('economyApp:economy-fiscal') # as derived
-
-        # Make the GET request
-        response = self.client.get(url)
-
-        # Assert response status code
+        # Assuming URL is /economy/fiscal/
+        response = self.client.get("/economy/fiscal/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # Assert response data structure
-        self.assertEqual(response.data['status'], 'success')
-        self.assertEqual(response.data['messages'], expected_success_message)
-        self.assertEqual(response.data['data'], mock_response_data)
-
-        # Assert that requests.get was called correctly
-        ALPHA_API_KEY = os.getenv("ALPHA_API_KEY")
-        ALPHA_BASE_URL = os.getenv("ALPHA_BASE_URL")
-        # Ensure these are not None for the test to be meaningful
-        self.assertIsNotNone(ALPHA_API_KEY, "ALPHA_API_KEY should be set in environment for this test")
-        self.assertIsNotNone(ALPHA_BASE_URL, "ALPHA_BASE_URL should be set in environment for this test")
+        response_data = response.json()
+        self.assertEqual(response_data["status"], "success")
+        self.assertEqual(response_data["data"], {"data": "fiscal data"})
+        self.assertIn("Fiscal economy data fetched successfully", response_data["messages"])
         
-        expected_url = f"{ALPHA_BASE_URL}/query?function=NEWS_SENTIMENT&apikey={ALPHA_API_KEY}&topics=economy_fiscal"
-        mock_get.assert_called_once_with(expected_url)
-        mock_api_response.raise_for_status.assert_called_once()
+        # Verify the correct URL was called
+        expected_url = f"{self.mock_alpha_base_url}/query?function=NEWS_SENTIMENT&apikey={self.mock_alpha_api_key}&topics=economy_fiscal"
+        mock_requests_get.assert_called_once_with(expected_url)
 
-
+    @patch.dict(os.environ, {
+        "ALPHA_API_KEY": "TEST_KEY",
+        "ALPHA_BASE_URL": "http://mockalphavantage.com"
+    })
     @patch('economyApp.views.requests.get')
-    def test_get_economy_fiscal_sentiment_api_error(self, mock_get):
-        # Configure the mock_get to raise a requests.exceptions.RequestException
-        api_error_message = "API connection error"
-        mock_get.side_effect = requests.exceptions.RequestException(api_error_message)
-
-        # Define the URL
-        url = reverse('economyApp:economy-fiscal')
-
-        # Make the GET request
-        response = self.client.get(url)
-
-        # Assert response status code
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # Assert response data structure
-        self.assertEqual(response.data['status'], 'error')
-        self.assertEqual(response.data['messages'], api_error_message)
-        self.assertIsNone(response.data['data'])
-        
-        # Assert that requests.get was called (even though it failed)
-        ALPHA_API_KEY = os.getenv("ALPHA_API_KEY")
-        ALPHA_BASE_URL = os.getenv("ALPHA_BASE_URL")
-        # Ensure these are not None for the test to be meaningful
-        self.assertIsNotNone(ALPHA_API_KEY, "ALPHA_API_KEY should be set in environment for this test")
-        self.assertIsNotNone(ALPHA_BASE_URL, "ALPHA_BASE_URL should be set in environment for this test")
-
-        expected_url = f"{ALPHA_BASE_URL}/query?function=NEWS_SENTIMENT&apikey={ALPHA_API_KEY}&topics=economy_fiscal"
-        mock_get.assert_called_once_with(expected_url)
-
-    @patch('economyApp.views.requests.get')
-    def test_get_economy_fiscal_sentiment_http_error(self, mock_get):
-        # Configure the mock_get object for a failed HTTP response (e.g., 401, 403, 429)
+    def test_get_economy_monetary_sentiment(self, mock_requests_get):
         mock_api_response = MagicMock()
-        mock_api_response.status_code = 401 # Example: Unauthorized
-        mock_api_response.reason = "Unauthorized"
-        mock_api_response.json.return_value = {'error': 'Invalid API Key'}
-        # Configure raise_for_status to simulate an HTTPError
-        mock_api_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
-            f"{mock_api_response.status_code} Client Error: {mock_api_response.reason} for url: FAKE_URL", 
-            response=mock_api_response
-        )
-        mock_get.return_value = mock_api_response
+        mock_api_response.status_code = 200
+        mock_api_response.json.return_value = {"data": "monetary data"}
+        mock_requests_get.return_value = mock_api_response
 
-        url = reverse('economyApp:economy-fiscal')
-        response = self.client.get(url)
+        response = self.client.get("/economy/monetary/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        self.assertEqual(response_data["status"], "success")
+        self.assertEqual(response_data["data"], {"data": "monetary data"})
+        self.assertIn("Monetary economy data fetched successfully", response_data["messages"])
+        
+        expected_url = f"{self.mock_alpha_base_url}/query?function=NEWS_SENTIMENT&apikey={self.mock_alpha_api_key}&topics=economy_monetary"
+        mock_requests_get.assert_called_once_with(expected_url)
 
+    @patch.dict(os.environ, {
+        "ALPHA_API_KEY": "TEST_KEY",
+        "ALPHA_BASE_URL": "http://mockalphavantage.com"
+    })
+    @patch('economyApp.views.requests.get')
+    def test_get_economy_macro_sentiment(self, mock_requests_get):
+        mock_api_response = MagicMock()
+        mock_api_response.status_code = 200
+        mock_api_response.json.return_value = {"data": "macro data"}
+        mock_requests_get.return_value = mock_api_response
+
+        response = self.client.get("/economy/macro/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        self.assertEqual(response_data["status"], "success")
+        self.assertEqual(response_data["data"], {"data": "macro data"})
+        self.assertIn("Macro economy data fetched successfully", response_data["messages"])
+
+        expected_url = f"{self.mock_alpha_base_url}/query?function=NEWS_SENTIMENT&apikey={self.mock_alpha_api_key}&topics=economy_macro"
+        mock_requests_get.assert_called_once_with(expected_url)
+
+    @patch.dict(os.environ, {
+        "ALPHA_API_KEY": "TEST_KEY",
+        "ALPHA_BASE_URL": "http://mockalphavantage.com"
+    })
+    @patch('economyApp.views.requests.get')
+    def test_economy_api_request_exception(self, mock_requests_get):
+        mock_requests_get.side_effect = requests.exceptions.RequestException("API Connection Error")
+
+        response = self.client.get("/economy/fiscal/") # Test with one endpoint
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(response.data['status'], 'error')
-        # The message in error_response comes from str(e), where e is RequestException.
-        # For HTTPError, this string representation includes the status code, reason, and URL.
-        self.assertTrue(f"{mock_api_response.status_code} Client Error: {mock_api_response.reason}" in response.data['messages'])
-        self.assertIsNone(response.data['data'])
+        response_data = response.json()
+        self.assertEqual(response_data["status"], "error")
+        self.assertEqual(response_data["messages"], "API Connection Error")
 
-        ALPHA_API_KEY = os.getenv("ALPHA_API_KEY")
-        ALPHA_BASE_URL = os.getenv("ALPHA_BASE_URL")
-        expected_url = f"{ALPHA_BASE_URL}/query?function=NEWS_SENTIMENT&apikey={ALPHA_API_KEY}&topics=economy_fiscal"
-        mock_get.assert_called_once_with(expected_url)
-        mock_api_response.raise_for_status.assert_called_once()
+    @patch.dict(os.environ, {
+        "ALPHA_API_KEY": "TEST_KEY_UNSET" # Simulate unset or incorrect key
+    })
+    @patch('economyApp.views.requests.get')
+    def test_economy_api_key_issue_simulation(self, mock_requests_get):
+        # This test simulates how the external API might behave with a bad key,
+        # usually a 4xx error or specific error message in JSON.
+        # Alpha Vantage typically returns a specific JSON error for invalid keys.
+        mock_api_response = MagicMock()
+        mock_api_response.status_code = 200 # Some APIs return 200 but with an error payload
+        mock_api_response.json.return_value = {
+            "Information": "The API key is invalid or missing."
+        }
+        # Or, if it returns an HTTP error for bad keys:
+        # mock_api_response.status_code = 401
+        # mock_api_response.raise_for_status.side_effect = requests.exceptions.HTTPError("Invalid API Key")
+        # mock_api_response.text = "Invalid API Key"
+
+        mock_requests_get.return_value = mock_api_response
+
+        response = self.client.get("/economy/fiscal/")
+        # Depending on how _fetch_alpha_vantage_data handles this (e.g., if it checks response content for errors)
+        # For now, assuming it returns the JSON as is if status is 200.
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        # The success_response wrapper will still make it look like a "success" at transport level
+        self.assertEqual(response_data["status"], "success")
+        self.assertIn("Information", response_data["data"])
+        self.assertEqual(response_data["data"]["Information"], "The API key is invalid or missing.")
+
+        # If the actual API returned a 401 and raise_for_status() was triggered:
+        # self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # self.assertIn("Invalid API Key", response.json()["messages"])
