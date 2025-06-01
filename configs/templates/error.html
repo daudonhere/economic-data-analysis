@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error {{ status_code }}</title>
+    <link rel="icon" type="image/png" href="https://www.djangoproject.com/favicon.ico">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #083423;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 100px auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #39A36E;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            transition: 0.3s;
+        }
+        .btn:hover {
+            background: #2E855E;
+        }
+        footer {
+            margin-top: 50px;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Oopss, Error {{ status_code }}</h1>
+        <p>
+            {% if status_code == 400 %}
+            <span style="font-weight: bold;">
+                {{ error_message }}
+            </span>
+            {% elif status_code == 403 %}
+            <span style="font-weight: bold;">
+                {{ error_message }}
+            </span>
+            {% elif status_code == 404 %}
+            <span style="font-weight: bold;">
+                {{ error_message }}
+            </span>
+            {% elif status_code == 500 %}
+            <span style="font-weight: bold;">
+                {{ error_message }}
+            </span>
+            {% else %}
+            <span style="font-weight: bold;">
+                {{ error_message }}
+            </span>
+            {% endif %}
+        </p>
+        <a href="/" class="btn">Go to Mainpage</a>
+    </div>
+
+    <footer>
+        &copy;Economy & Finance Trend Analysis. Built with ❤️ by Daud Yusup
+    </footer>
+</body>
+</html>
