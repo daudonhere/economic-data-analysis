@@ -86,7 +86,14 @@ Here are the steps to install and run this project in your local environment:
     DEBUG = False
     ALLOWED_HOSTS = []
     ```
-    In app configs/settings.py for debugging
+    In app configs/settings.py for debuging
+
+
+## Flow the Project
+
+<p align="center">
+  <img src="economic-analysis.png" alt="Economy & Finance Trend Analytics Application Preview" width="800"/>
+</p>
 
 ---
 
