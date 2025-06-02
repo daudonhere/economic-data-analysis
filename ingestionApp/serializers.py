@@ -5,7 +5,7 @@ class IngestionDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = IngestionData
         fields = ['id', 'content', 'source', 'createdAt', 'updatedAt']
-        
+
 class GetIngestionDataSerializer(serializers.ModelSerializer):
     result = serializers.JSONField(source='content')
     updatedAt = serializers.DateTimeField()
