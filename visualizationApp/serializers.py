@@ -5,7 +5,7 @@ class VisualizationDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = VisualizationData
         fields = [
-            'id', 
+            'id',
             'analyzed_endpoint',
             'input_transformed_data',
             'all_phrases_analysis',
