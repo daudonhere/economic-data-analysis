@@ -1,4 +1,5 @@
 set -e
-echo "collecting static files..."
-python manage.py collectstatic --noinput
-echo "finished collecting static files."
+
+echo "Mengumpulkan file statis..."
+python3 manage.py collectstatic --noinput
+echo "Selesai mengumpulkan file statis."
